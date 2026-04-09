@@ -1,1 +1,2454 @@
-{"metadata":{"kernelspec":{"language":"python","display_name":"Python 3","name":"python3"},"language_info":{"name":"python","version":"3.12.12","mimetype":"text/x-python","codemirror_mode":{"name":"ipython","version":3},"pygments_lexer":"ipython3","nbconvert_exporter":"python","file_extension":".py"},"kaggle":{"accelerator":"nvidiaTeslaT4","dataSources":[{"sourceType":"datasetVersion","sourceId":15431558,"datasetId":9870126,"databundleVersionId":16350591},{"sourceType":"datasetVersion","sourceId":15464104,"datasetId":9893256,"databundleVersionId":16386553}],"dockerImageVersionId":31328,"isInternetEnabled":true,"language":"python","sourceType":"notebook","isGpuEnabled":true}},"nbformat_minor":4,"nbformat":4,"cells":[{"cell_type":"code","source":"# This Python 3 environment comes with many helpful analytics libraries installed\n# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n# For example, here's several helpful packages to load\n\nimport numpy as np # linear algebra\nimport pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n\n# Input data files are available in the read-only \"../input/\" directory\n# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n\nimport os\nfor dirname, _, filenames in os.walk('/kaggle/input'):\n    for filename in filenames:\n        print(os.path.join(dirname, filename))\n\n# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session","metadata":{"_uuid":"8f2839f25d086af736a60e9eeb907d3b93b6e0e5","_cell_guid":"b1076dfc-b9ad-4769-8c92-a6c4dae69d19","trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:27.104430Z","iopub.execute_input":"2026-04-08T18:29:27.104782Z","iopub.status.idle":"2026-04-08T18:29:27.468821Z","shell.execute_reply.started":"2026-04-08T18:29:27.104750Z","shell.execute_reply":"2026-04-08T18:29:27.467918Z"}},"outputs":[{"name":"stdout","text":"The history saving thread hit an unexpected error (OperationalError('attempt to write a readonly database')).History will not be written to the database.\n/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/57epigenomes.RPKM.pc/57epigenomes.RPKM.pc\n/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K4me3_counts.txt\n/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K27me3_counts.txt\n/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K4me1_counts.txt\n/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K9me3_counts.txt\n/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K36me3_counts.txt\n/kaggle/input/datasets/mariamali12/e047-dataset/E047_dataset.csv\n","output_type":"stream"}],"execution_count":1},{"cell_type":"code","source":"#import data\ndf = pd.read_csv('/kaggle/input/datasets/mariamali12/e047-dataset/E047_dataset.csv',index_col=0)\ndf.columns","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:27.470076Z","iopub.execute_input":"2026-04-08T18:29:27.470465Z","iopub.status.idle":"2026-04-08T18:29:28.164815Z","shell.execute_reply.started":"2026-04-08T18:29:27.470438Z","shell.execute_reply":"2026-04-08T18:29:28.164028Z"}},"outputs":[{"execution_count":2,"output_type":"execute_result","data":{"text/plain":"Index(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',\n       ...\n       '491', '492', '493', '494', '495', '496', '497', '498', '499', 'label'],\n      dtype='object', length=501)"},"metadata":{}}],"execution_count":2},{"cell_type":"code","source":"df.head()","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:28.165935Z","iopub.execute_input":"2026-04-08T18:29:28.166323Z","iopub.status.idle":"2026-04-08T18:29:28.187870Z","shell.execute_reply.started":"2026-04-08T18:29:28.166290Z","shell.execute_reply":"2026-04-08T18:29:28.187342Z"}},"outputs":[{"execution_count":3,"output_type":"execute_result","data":{"text/plain":"                 0  1  2  3  4  5  6  7  8  9  ...  491  492  493  494  495  \\\nENSG00000000003  1  4  1  0  2  1  1  2  1  0  ...    1    2    0    2    0   \nENSG00000000005  0  1  0  0  1  0  0  0  0  0  ...    1    1    2    5    0   \nENSG00000000419  1  3  6  1  1  2  1  6  2  1  ...    4    1    0    1    3   \nENSG00000000457  2  3  4  1  0  1  8  2  3  0  ...    3    2    1    4    1   \nENSG00000000460  3  4  3  4  2  3  4  0  2  0  ...    5    1    2    1    2   \n\n                 496  497  498  499  label  \nENSG00000000003    0    1    1    4     -1  \nENSG00000000005    0    1    0    2     -1  \nENSG00000000419    4    4    0    3      1  \nENSG00000000457    3    2    3    6      1  \nENSG00000000460    6    3    3    1      1  \n\n[5 rows x 501 columns]","text/html":"<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>0</th>\n      <th>1</th>\n      <th>2</th>\n      <th>3</th>\n      <th>4</th>\n      <th>5</th>\n      <th>6</th>\n      <th>7</th>\n      <th>8</th>\n      <th>9</th>\n      <th>...</th>\n      <th>491</th>\n      <th>492</th>\n      <th>493</th>\n      <th>494</th>\n      <th>495</th>\n      <th>496</th>\n      <th>497</th>\n      <th>498</th>\n      <th>499</th>\n      <th>label</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>ENSG00000000003</th>\n      <td>1</td>\n      <td>4</td>\n      <td>1</td>\n      <td>0</td>\n      <td>2</td>\n      <td>1</td>\n      <td>1</td>\n      <td>2</td>\n      <td>1</td>\n      <td>0</td>\n      <td>...</td>\n      <td>1</td>\n      <td>2</td>\n      <td>0</td>\n      <td>2</td>\n      <td>0</td>\n      <td>0</td>\n      <td>1</td>\n      <td>1</td>\n      <td>4</td>\n      <td>-1</td>\n    </tr>\n    <tr>\n      <th>ENSG00000000005</th>\n      <td>0</td>\n      <td>1</td>\n      <td>0</td>\n      <td>0</td>\n      <td>1</td>\n      <td>0</td>\n      <td>0</td>\n      <td>0</td>\n      <td>0</td>\n      <td>0</td>\n      <td>...</td>\n      <td>1</td>\n      <td>1</td>\n      <td>2</td>\n      <td>5</td>\n      <td>0</td>\n      <td>0</td>\n      <td>1</td>\n      <td>0</td>\n      <td>2</td>\n      <td>-1</td>\n    </tr>\n    <tr>\n      <th>ENSG00000000419</th>\n      <td>1</td>\n      <td>3</td>\n      <td>6</td>\n      <td>1</td>\n      <td>1</td>\n      <td>2</td>\n      <td>1</td>\n      <td>6</td>\n      <td>2</td>\n      <td>1</td>\n      <td>...</td>\n      <td>4</td>\n      <td>1</td>\n      <td>0</td>\n      <td>1</td>\n      <td>3</td>\n      <td>4</td>\n      <td>4</td>\n      <td>0</td>\n      <td>3</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <th>ENSG00000000457</th>\n      <td>2</td>\n      <td>3</td>\n      <td>4</td>\n      <td>1</td>\n      <td>0</td>\n      <td>1</td>\n      <td>8</td>\n      <td>2</td>\n      <td>3</td>\n      <td>0</td>\n      <td>...</td>\n      <td>3</td>\n      <td>2</td>\n      <td>1</td>\n      <td>4</td>\n      <td>1</td>\n      <td>3</td>\n      <td>2</td>\n      <td>3</td>\n      <td>6</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <th>ENSG00000000460</th>\n      <td>3</td>\n      <td>4</td>\n      <td>3</td>\n      <td>4</td>\n      <td>2</td>\n      <td>3</td>\n      <td>4</td>\n      <td>0</td>\n      <td>2</td>\n      <td>0</td>\n      <td>...</td>\n      <td>5</td>\n      <td>1</td>\n      <td>2</td>\n      <td>1</td>\n      <td>2</td>\n      <td>6</td>\n      <td>3</td>\n      <td>3</td>\n      <td>1</td>\n      <td>1</td>\n    </tr>\n  </tbody>\n</table>\n<p>5 rows × 501 columns</p>\n</div>"},"metadata":{}}],"execution_count":3},{"cell_type":"markdown","source":"# Reforming the data to resemble the author's","metadata":{}},{"cell_type":"markdown","source":"Actually, we are doing this step just to match the author's data shape. However, we do not need to reshape our dataset because the author has already done so to meet the requirements of the deprecated Torch7 framework, while we will be using PyTorch.","metadata":{}},{"cell_type":"code","source":"rows = []\nfor gene_id, row in df.iterrows():\n    label = row['label']\n    # Get 500 features and reshape to (100, 5), 100 bins, 5 histone marks\n    features = row.drop('label').values.reshape(100, 5)\n    \n    for bin_num in range(100):\n        bin_features = features[bin_num]\n        rows.append([\n            gene_id,\n            bin_num + 1,\n            bin_features[0],  # H3K4me3\n            bin_features[1],  # H3K4me1\n            bin_features[2],  # H3K36me3\n            bin_features[3],  # H3K9me3\n            bin_features[4],  # H3K27me3\n            int(label)\n        ])","metadata":{"execution":{"iopub.status.busy":"2026-04-08T18:29:28.189331Z","iopub.execute_input":"2026-04-08T18:29:28.190032Z","iopub.status.idle":"2026-04-08T18:29:38.986899Z","shell.execute_reply.started":"2026-04-08T18:29:28.189995Z","shell.execute_reply":"2026-04-08T18:29:38.985929Z"},"trusted":true},"outputs":[],"execution_count":4},{"cell_type":"markdown","source":"# Create dataframe\nauthors_df = pd.DataFrame(rows, columns=[\n    'GeneID', 'BinID',\n    'H3K4me3', 'H3K4me1', 'H3K36me3', 'H3K9me3', 'H3K27me3',\n    'Label'\n])\n\nprint(f\"Authors format shape: {authors_df.shape}\")\nprint(f\"\\nFirst few rows:\")\nprint(authors_df.head())","metadata":{"execution":{"iopub.status.busy":"2026-04-01T19:30:46.037038Z","iopub.execute_input":"2026-04-01T19:30:46.037299Z","iopub.status.idle":"2026-04-01T19:30:50.978528Z","shell.execute_reply.started":"2026-04-01T19:30:46.037271Z","shell.execute_reply":"2026-04-01T19:30:50.977680Z"}}},{"cell_type":"markdown","source":"# Clone the Author's DeepChrome Repo","metadata":{}},{"cell_type":"code","source":"import subprocess\n\n# Clone the DeepChrome repository\nresult = subprocess.run(\n    ['git', 'clone', 'https://github.com/QData/DeepChrome.git'],\n    capture_output=True,\n    text=True\n)\n\nprint(result.stdout)\nprint(result.stderr)\n\n# Verify structure\nprint(\"\\nRepo contents:\")\nfor item in os.listdir('DeepChrome'):\n    print(f\"  {item}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:38.987996Z","iopub.execute_input":"2026-04-08T18:29:38.988270Z","iopub.status.idle":"2026-04-08T18:29:40.586397Z","shell.execute_reply.started":"2026-04-08T18:29:38.988242Z","shell.execute_reply":"2026-04-08T18:29:40.585555Z"}},"outputs":[{"name":"stdout","text":"\nCloning into 'DeepChrome'...\n\n\nRepo contents:\n  AttentiveChrome-PyTorch\n  talks\n  CellInfo.pdf\n  .git\n  LICENSE\n  FeatureMaps and Barplots.zip\n  README.md\n  deepChrome-TorchCode\n","output_type":"stream"}],"execution_count":5},{"cell_type":"code","source":"# Check the PyTorch implementation\nprint(\"AttentiveChrome-PyTorch contents:\")\nfor item in os.listdir('DeepChrome/AttentiveChrome-PyTorch'):\n    print(f\"  {item}\")\n\nprint(\"\\ndeepChrome-TorchCode contents:\")\nfor item in os.listdir('DeepChrome/deepChrome-TorchCode'):\n    print(f\"  {item}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:40.587504Z","iopub.execute_input":"2026-04-08T18:29:40.587799Z","iopub.status.idle":"2026-04-08T18:29:40.592697Z","shell.execute_reply.started":"2026-04-08T18:29:40.587767Z","shell.execute_reply":"2026-04-08T18:29:40.591926Z"}},"outputs":[{"name":"stdout","text":"AttentiveChrome-PyTorch contents:\n  README.md\n  v2PyTorch\n\ndeepChrome-TorchCode contents:\n  6_eval.lua\n  doall_eval.lua\n  data\n  7_viz.lua\n  doall.lua\n  5_test.lua\n  1_data.lua\n  auRoc.lua\n  3_loss.lua\n  4_train.lua\n  2_model.lua\n","output_type":"stream"}],"execution_count":6},{"cell_type":"markdown","source":"### Problem\nThe author's original code is written with Torch7, which is essentially dead, so we can't replicate the exact code.\nSo, We are going to extract the hyperparameters used in his code and build a new CNN with PyTorch.","metadata":{}},{"cell_type":"code","source":"# Read the original Lua model file\nwith open('DeepChrome/deepChrome-TorchCode/2_model.lua', 'r') as f:\n    print(f.read())","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:40.594229Z","iopub.execute_input":"2026-04-08T18:29:40.594442Z","iopub.status.idle":"2026-04-08T18:29:40.598702Z","shell.execute_reply.started":"2026-04-08T18:29:40.594422Z","shell.execute_reply":"2026-04-08T18:29:40.598020Z"}},"outputs":[{"name":"stdout","text":"----------------------------------------------------------------------\n-- NN model \n---------------------------------------------------------------------\nrequire 'torch'   -- torch\nrequire 'image'   -- for image transforms\nrequire 'nn'      -- provides all sorts of trainable modules/layers\nrequire 'math'\n----------------------------------------------------------------------\nprint '==>DeepChrome Classification Model' \nprint '==> define parameters'\n\n-- Classification problem\nnoutputs = 2\n\n-- input dimensions\nnfeats=5\nwidth = 100\nninputs = nfeats*width\n\n-- number of hidden units (for MLP only):\nnhiddens = ninputs / 2\n\n-- hidden units, filter sizes (for ConvNet only):\nnstates = {50,625,125}\nfiltsize = 10\npoolsize = 5\npadding = math.floor(filtsize/2)\n----------------------------------------------------------------------\nprint '==> construct model'\n\nif opt.model == 'linear' then\n\n   -- Simple linear model\n   model = nn.Sequential()\n   model:add(nn.Reshape(ninputs))\n   model:add(nn.Linear(ninputs,noutputs))\n\nelseif opt.model == 'mlp' then\n\n   -- Simple 2-layer neural network, with tanh hidden units\n   model = nn.Sequential()\n   model:add(nn.Reshape(ninputs))\n   model:add(nn.Linear(ninputs,nhiddens))\n   model:add(nn.Tanh())\n   model:add(nn.Linear(nhiddens,noutputs))\n\nelseif opt.model == 'convnet' then\n\n  \n  -- a typical modern convolution network (conv+relu+pool)\n  model = nn.Sequential()\n\n  -- stage 1 : filter bank -> squashing -> Max pooling\n  model:add(nn.TemporalConvolution(nfeats, nstates[1], filtsize))\n  model:add(nn.ReLU())\n  model:add(nn.TemporalMaxPooling(poolsize))\n\n  -- stage 2 : standard 2-layer neural network\n  model:add(nn.View(math.ceil((width-filtsize)/poolsize)*nstates[1]))\n  model:add(nn.Dropout(0.5))\n  model:add(nn.Linear(math.ceil((width-filtsize)/poolsize)*nstates[1], nstates[2]))\n  model:add(nn.ReLU())\n  model:add(nn.Linear(nstates[2], nstates[3]))\n\n  model:add(nn.ReLU())\n  model:add(nn.Linear(nstates[3], noutputs))\n\nelse\n   error('unknown -model')\n\nend\n\n----------------------------------------------------------------------\nprint '==> here is the model:'\nprint(model)\n\n----------------------------------------------------------------------\n\n\n","output_type":"stream"}],"execution_count":7},{"cell_type":"code","source":"with open('DeepChrome/deepChrome-TorchCode/4_train.lua', 'r') as f:\n    print(f.read())","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:40.599610Z","iopub.execute_input":"2026-04-08T18:29:40.599994Z","iopub.status.idle":"2026-04-08T18:29:40.603469Z","shell.execute_reply.started":"2026-04-08T18:29:40.599946Z","shell.execute_reply":"2026-04-08T18:29:40.602896Z"}},"outputs":[{"name":"stdout","text":"----------------------------------------------------------------------\n-- This script defines training procedure,\n-- irrespective of the model/loss functions chosen.\n--\n-- It is used to \n\n--   + define a closure to estimate (a noisy) loss\n--     function, as well as its derivatives wrt the parameters of the\n--     model to be trained\n--   + optimize the function, according to: SGD\n--\n-- Ritambhara Singh\n----------------------------------------------------------------------\n\nrequire 'torch'   -- torch\nrequire 'xlua'    -- xlua provides useful tools, like progress bars\nrequire 'optim'   -- an optimization package, for online and batch methods\ninclude('auRoc.lua')\n----------------------------------------------------------------------\n\nprint '==> loading data'\n\ntraindataset={}\nfunction traindataset:size() return opt.trsize end\n\nfor i=1,traindataset:size() do\n  local input = trainset[i].data;    \n  local output = trainset[i].label;\n  traindataset[i] = {input, output}\nend\n\ntestdataset={}\nfunction testdataset:size() return opt.tssize end\n\nfor i=1,testdataset:size() do\n  local input = testset[i].data;     \n  local output = testset[i].label;\n  testdataset[i] = {input, output}\nend\n------------------------------------------------------------------------------\n\nprint '==> defining some tools'\n\n--classes\n\nclasses = {'1','2'}\n\n\n-- This matrix records the current confusion across classes\nconfusion = optim.ConfusionMatrix(classes)\nlocal AUC = auRoc:new()\nlocal AUC_target=1\n\nfilePath=opt.resultsDir .. opt.dataset\n\n-- Log results to files\ntrainLogger = optim.Logger(paths.concat(filePath, 'train.log'))\ntestLogger = optim.Logger(paths.concat(filePath, 'test.log'))\n\n-- Retrieve parameters and gradients:\n-- this extracts and flattens all the trainable parameters of the mode\n-- into a 1-dim vector\n\nif model then\n   parameters,gradParameters = model:getParameters()\nend\n\n----------------------------------------------------------------------\nprint '==> configuring optimizer : SGD'\n\n\noptimState = {\n \t   learningRate = opt.learningRate,\t\n\t   weightDecay = opt.weightDecay,\n \t   momentum = opt.momentum,\n      \t   learningRateDecay = 1e-7\n}\noptimMethod = optim.sgd\n\n----------------------------------------------------------------------\nprint '==> defining training procedure'\n\nfunction train()\n\n   -- epoch tracker\n   epoch = epoch or 1\n\n   -- local vars\n   local time = sys.clock()\n\n   -- set model to training mode (for modules that differ in training and testing, like Dropout)\n   model:training()\n\n   -- training size\n   trsize=traindataset:size()\n\n   -- shuffle at each epoch\n   shuffle = torch.randperm(trsize)\n\n   -- do one epoch\n   print('==> doing epoch on training data:')\n\n   for t=1,traindataset:size() do\n      -- disp progress\n      xlua.progress(t, traindataset:size())\n      \n      local input = traindataset[shuffle[t]][1]\n      local target = traindataset[shuffle[t]][2]\n      if opt.type == 'double' then input = input:double()\n      elseif opt.type == 'cuda' then input = input:cuda() end\n      \n  \n      -- create closure to evaluate f(X) and df/dX\n      local feval = function(x)\n   \t -- get new parameters\n         if x ~= parameters then\n            parameters:copy(x)\n         end\n\n\t -- reset gradients\n   \t gradParameters:zero()\n \n\t\n       \t -- estimate f\n       \t local output = model:forward(input)\n       \t f = criterion:forward(output,target)\n       \t \n       \t -- estimate df/dW\n       \t local df_do = criterion:backward(output,target)\n       \t model:backward(input, df_do)\n\n\t -- update confusion\n         confusion:add(output,target)\n\t print(target)\n\t \n\t if target == 2 then AUC_target=-1 else AUC_target=1 end\n\t print(AUC_target)\n\n\t AUC:add(math.exp(output[1]), AUC_target)\n\t \t \n  \t -- return f and df/dX\n       \t return f,gradParameters\n      end\n      optimMethod(feval, parameters, optimState)\n   end\n \n\n   -- time taken\n   time = sys.clock() - time\n   time = time / traindataset:size()\n   print(\"\\n==> time to learn 1 sample = \" .. (time*1000) .. 'ms')\n\n   -- print confusion matrix\n   print(confusion)\n\n   --Calculate and print AUC score\n   local AUROC = AUC:calculateAuc()\n   print(' + AUROC: '..AUROC)\n\n      -- save/log current net\n   local modelname = ('model.' .. epoch .. '.net')\n   local filename = paths.concat(filePath, modelname)\n   os.execute('mkdir -p ' .. sys.dirname(filename))\n   print('==> saving model to '..filename)\n   torch.save(filename, model)\n  \n\n   trainLogger:add{['AUC Score (train set)'] = AUROC}\n\n   -- next epoch\n   confusion:zero()\n   AUC:zero()\n\n   epoch = epoch + 1\nend\n\n\n","output_type":"stream"}],"execution_count":8},{"cell_type":"code","source":"with open('DeepChrome/deepChrome-TorchCode/doall.lua', 'r') as f:\n    print(f.read())","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:40.604282Z","iopub.execute_input":"2026-04-08T18:29:40.604601Z","iopub.status.idle":"2026-04-08T18:29:40.608717Z","shell.execute_reply.started":"2026-04-08T18:29:40.604570Z","shell.execute_reply":"2026-04-08T18:29:40.608224Z"}},"outputs":[{"name":"stdout","text":"--------------------------------------------------------------------- \n--\n-- This script performs training and testing on \n-- covnet model on a\n-- classification problem. \n--\n\n--\n-- Ritambhara Singh\n----------------------------------------------------------------------\nrequire 'torch'\n\n---------------------------------------------------------------------\nprint '==> processing options'\n\nlocal set = function()\n      cmd = torch.CmdLine()\n      cmd:text()\n      cmd:text('DeepChrome Pipeline options')\n      cmd:text()\n      cmd:text('Options:')\n\n      -- global:\n      cmd:option('-seed', 1, 'fixed input seed for repeatable experiments')\n      cmd:option('-threads', 2, 'number of threads')\n      cmd:option('--epochs', 100, 'number of epochs')\n      --data:\n      cmd:option('-dataDir', \"data/\", 'The data home location')\n      cmd:option('-dataset', \"toy/\", 'Dataset name, corresponds to the folder name in dataDir')\n      cmd:option('-resultsDir', \"results/\", 'The data home location')\n      cmd:option('-name', \"\", 'Optionally, give a name for this model')\n      cmd:option('-trsize', \"10\", 'Training set size (number of genes)')\n      cmd:option('-tssize', \"10\", 'Test set size (number of genes)')\n\n      --model:\n      cmd:option('-nonlinearity', 'relu', 'type of nonlinearity function to use: tanh | relu | prelu')\n      cmd:option('-loss', 'nll', 'type of loss function to minimize: nll')\n      cmd:option('-model', 'convnet', 'type of model : linear|mlp|convnet')\n      cmd:option('-nhus', '128', 'Number of hidden units in each layer')\n      cmd:option('-ipdim', '1', 'Input dimension for spatial convolution')\n      cmd:option('-opdim1', '6', 'Output dimension for spatial convolution')\n      cmd:option('-opdim2', '16', 'Output dimension for spatial convolution')\n      cmd:option('-FCnhus1', '120', 'Number of hidden units for fully connected layers')\n      cmd:option('-FCnhus2', '84', 'Number of hidden units for fully connected layers')\n      cmd:option('-conv_kernels', '5', 'Window size of mlp or convolution kernel sizes of conv')\n      cmd:option('-pools', '2' , 'sizes of pooling windows')\n\n      -- training:\n      cmd:option('-save', 'results', 'subdirectory to save/log experiments in')\n      cmd:option('-plot', false, 'live plot')\n      cmd:option('-learningRate', 1e-3, 'learning rate at t=0')\n      cmd:option('-batchSize', 1, 'mini-batch size (1 = pure stochastic)')\n      cmd:option('-weightDecay', 0, 'weight decay (SGD only)')\n      cmd:option('-momentum', 0, 'momentum (SGD only)')\n      cmd:option('-type', 'double', 'type: double | float | cuda')\n      cmd:text()\n      opt = cmd:parse(arg or {})\nend\n\nset()\n\n-- nb of threads and fixed seed (for repeatable experiments)\n\ntorch.setnumthreads(opt.threads)\ntorch.manualSeed(opt.seed)\n\n----------------------------------------------------------------------\nprint '==> executing all'\ndofile '1_data.lua'\ndofile '2_model.lua'\ndofile '3_loss.lua'\ndofile '4_train.lua'\ndofile '5_test.lua'\n\n----------------------------------------------------------------------\nprint '==> training!'\nlocal i = 1\n\nwhile i<opt.epochs do\n   train()\n   test()\n   i=i+1\nend\n\n","output_type":"stream"}],"execution_count":9},{"cell_type":"markdown","source":"# Building the CNN","metadata":{}},{"cell_type":"code","source":"import torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torch.utils.data import DataLoader, TensorDataset\nfrom sklearn.metrics import roc_auc_score\nfrom sklearn.model_selection import train_test_split\nimport numpy as np\n\n# Set seed for reproducibility\ntorch.manual_seed(1)\nnp.random.seed(1)","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:29:40.610919Z","iopub.execute_input":"2026-04-08T18:29:40.611172Z","iopub.status.idle":"2026-04-08T18:29:45.586605Z","shell.execute_reply.started":"2026-04-08T18:29:40.611135Z","shell.execute_reply":"2026-04-08T18:29:45.586014Z"}},"outputs":[],"execution_count":10},{"cell_type":"code","source":"#CNN Model\nclass DeepChrome(nn.Module):\n    def __init__(self, dropout_rate=0.5):\n        super(DeepChrome, self).__init__()\n        self.conv = nn.Sequential(\n            nn.Conv1d(in_channels=5, out_channels=50, kernel_size=10),\n            nn.ReLU(),\n            nn.MaxPool1d(kernel_size=5)\n        )\n        self.fc = nn.Sequential(\n            nn.Dropout(dropout_rate),\n            nn.Linear(900, 625),\n            nn.ReLU(),\n            nn.Linear(625, 125),\n            nn.ReLU(),\n            nn.Linear(125, 2)\n        )\n    def forward(self, x):\n        x = self.conv(x)\n        x = x.view(x.size(0), -1)\n        x = self.fc(x)\n        return x","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:26:40.668384Z","iopub.execute_input":"2026-04-08T20:26:40.668697Z","iopub.status.idle":"2026-04-08T20:26:40.674461Z","shell.execute_reply.started":"2026-04-08T20:26:40.668667Z","shell.execute_reply":"2026-04-08T20:26:40.673786Z"}},"outputs":[],"execution_count":34},{"cell_type":"code","source":"# Verify model structure\nmodel = DeepChrome()\nprint(model)\nprint(f\"\\nTotal parameters: {sum(p.numel() for p in model.parameters()):,}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:26:41.797121Z","iopub.execute_input":"2026-04-08T20:26:41.797603Z","iopub.status.idle":"2026-04-08T20:26:41.806784Z","shell.execute_reply.started":"2026-04-08T20:26:41.797574Z","shell.execute_reply":"2026-04-08T20:26:41.806220Z"}},"outputs":[{"name":"stdout","text":"DeepChrome(\n  (conv): Sequential(\n    (0): Conv1d(5, 50, kernel_size=(10,), stride=(1,))\n    (1): ReLU()\n    (2): MaxPool1d(kernel_size=5, stride=5, padding=0, dilation=1, ceil_mode=False)\n  )\n  (fc): Sequential(\n    (0): Dropout(p=0.5, inplace=False)\n    (1): Linear(in_features=900, out_features=625, bias=True)\n    (2): ReLU()\n    (3): Linear(in_features=625, out_features=125, bias=True)\n    (4): ReLU()\n    (5): Linear(in_features=125, out_features=2, bias=True)\n  )\n)\n\nTotal parameters: 644,177\n","output_type":"stream"}],"execution_count":35},{"cell_type":"code","source":"# Test with dummy input\ndummy = torch.randn(1, 5, 100)\nout = model(dummy)\nprint(f\"Output shape: {out.shape}\") ","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:26:49.687238Z","iopub.execute_input":"2026-04-08T20:26:49.687536Z","iopub.status.idle":"2026-04-08T20:26:49.694623Z","shell.execute_reply.started":"2026-04-08T20:26:49.687512Z","shell.execute_reply":"2026-04-08T20:26:49.694041Z"}},"outputs":[{"name":"stdout","text":"Output shape: torch.Size([1, 2])\n","output_type":"stream"}],"execution_count":36},{"cell_type":"code","source":"#Separate features and labels\nX = df.drop(columns=['label']).values  # (19300, 500)\ny = df['label'].values                 # (19300,) — +1 / -1\n\n# Convert +1/-1 (paper convention) → 1/0 (required by PyTorch NLLLoss)\ny = ((y + 1) // 2).astype(int)\nprint(f\"Label distribution: {np.bincount(y)}\")  # expect ~[9534, 9766]\n","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:26:51.298563Z","iopub.execute_input":"2026-04-08T20:26:51.299147Z","iopub.status.idle":"2026-04-08T20:26:51.331251Z","shell.execute_reply.started":"2026-04-08T20:26:51.299116Z","shell.execute_reply":"2026-04-08T20:26:51.330511Z"}},"outputs":[{"name":"stdout","text":"Label distribution: [9534 9766]\n","output_type":"stream"}],"execution_count":37},{"cell_type":"code","source":"# Reshape to (19300, 5, 100) \n# CSV layout: columns are [bin1_mark1..5, bin2_mark1..5, ..., bin100_mark1..5]\nX = X.reshape(-1, 100, 5).transpose(0, 2, 1)  # (19300, 5, 100)\nprint(f\"Feature shape: {X.shape}\")  # expect (19300, 5, 100)","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:26:54.836892Z","iopub.execute_input":"2026-04-08T20:26:54.837710Z","iopub.status.idle":"2026-04-08T20:26:54.841746Z","shell.execute_reply.started":"2026-04-08T20:26:54.837676Z","shell.execute_reply":"2026-04-08T20:26:54.840896Z"}},"outputs":[{"name":"stdout","text":"Feature shape: (19300, 5, 100)\n","output_type":"stream"}],"execution_count":38},{"cell_type":"code","source":"# Randomized train / val / test split\nnp.random.seed(1)\nindices = np.random.permutation(len(X))\n\ntrain_idx = indices[:6601]\nval_idx   = indices[6601:13202]\ntest_idx  = indices[13202:]\n\nX_train, y_train = X[train_idx], y[train_idx]\nX_val,   y_val   = X[val_idx],   y[val_idx]\nX_test,  y_test  = X[test_idx],  y[test_idx]\n\nprint(f\"Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:26:55.127658Z","iopub.execute_input":"2026-04-08T20:26:55.128191Z","iopub.status.idle":"2026-04-08T20:26:55.238214Z","shell.execute_reply.started":"2026-04-08T20:26:55.128162Z","shell.execute_reply":"2026-04-08T20:26:55.237556Z"}},"outputs":[{"name":"stdout","text":"Train: (6601, 5, 100), Val: (6601, 5, 100), Test: (6098, 5, 100)\n","output_type":"stream"}],"execution_count":39},{"cell_type":"code","source":"from torch.utils.data import Dataset, DataLoader\n# PyTorch Dataset \nclass GeneDataset(Dataset):\n    def __init__(self, X, y):\n        self.X = torch.tensor(X, dtype=torch.float32)\n        self.y = torch.tensor(y, dtype=torch.long)\n\n    def __len__(self):\n        return len(self.X)\n\n    def __getitem__(self, idx):\n        return self.X[idx], self.y[idx]\n#  DataLoaders\ntrain_loader = DataLoader(GeneDataset(X_train, y_train), batch_size=1,  shuffle=True)\nval_loader   = DataLoader(GeneDataset(X_val,   y_val),   batch_size=64, shuffle=False)\ntest_loader  = DataLoader(GeneDataset(X_test,  y_test),  batch_size=64, shuffle=False)","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:26:56.028120Z","iopub.execute_input":"2026-04-08T20:26:56.028448Z","iopub.status.idle":"2026-04-08T20:26:56.056203Z","shell.execute_reply.started":"2026-04-08T20:26:56.028411Z","shell.execute_reply":"2026-04-08T20:26:56.055594Z"}},"outputs":[],"execution_count":40},{"cell_type":"markdown","source":"# Training","metadata":{}},{"cell_type":"code","source":"#Setup \ndevice = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\nprint(f\"Using device: {device}\")\n\n# setting a seed matching the same seed the author selected\ntorch.manual_seed(1)\n#moving the model's parameters to the GPU\nmodel = DeepChrome().to(device)\n#using the same optimizer and criterion as the author's\noptimizer = optim.SGD(model.parameters(), lr=1e-3, weight_decay=0, momentum=0)\ncriterion = nn.NLLLoss()","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:26:59.637480Z","iopub.execute_input":"2026-04-08T20:26:59.637772Z","iopub.status.idle":"2026-04-08T20:26:59.650864Z","shell.execute_reply.started":"2026-04-08T20:26:59.637745Z","shell.execute_reply":"2026-04-08T20:26:59.650198Z"}},"outputs":[{"name":"stdout","text":"Using device: cuda\n","output_type":"stream"}],"execution_count":41},{"cell_type":"code","source":"#Training loop\nn_epochs = 100\ntrain_losses, val_losses, val_aurocs = [], [], []\n\nfor epoch in range(1, n_epochs + 1):\n\n    #Train \n    model.train()\n    epoch_loss = 0.0\n\n    for X_batch, y_batch in train_loader:\n        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n\n        optimizer.zero_grad()\n        output = model(X_batch)         \n        log_probs = torch.log_softmax(output, dim=1)  \n        loss = criterion(log_probs, y_batch)\n        loss.backward()\n        optimizer.step()\n\n        epoch_loss += loss.item()\n\n    avg_train_loss = epoch_loss / len(train_loader)\n    train_losses.append(avg_train_loss)\n\n    # Validate\n    model.eval()\n    val_loss = 0.0\n    all_probs, all_labels = [], []\n\n    with torch.no_grad():\n        for X_batch, y_batch in val_loader:\n            X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n\n            output = model(X_batch)\n            log_probs = torch.log_softmax(output, dim=1)\n            loss = criterion(log_probs, y_batch)\n            val_loss += loss.item()\n\n            probs = torch.softmax(output, dim=1)[:, 1]  \n            all_probs.extend(probs.cpu().numpy())\n            all_labels.extend(y_batch.cpu().numpy())\n\n    avg_val_loss = val_loss / len(val_loader)\n    val_losses.append(avg_val_loss)\n\n    val_auroc = roc_auc_score(all_labels, all_probs)\n    val_aurocs.append(val_auroc)\n\n    if epoch % 10 == 0:\n        print(f\"Epoch {epoch:3d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | Val AUROC: {val_auroc:.4f}\")\n\nprint(\"\\nTraining complete.\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:27:00.041707Z","iopub.execute_input":"2026-04-08T20:27:00.042011Z","iopub.status.idle":"2026-04-08T20:46:12.213452Z","shell.execute_reply.started":"2026-04-08T20:27:00.041984Z","shell.execute_reply":"2026-04-08T20:46:12.212635Z"}},"outputs":[{"name":"stdout","text":"Epoch  10 | Train Loss: 0.3599 | Val Loss: 0.3728 | Val AUROC: 0.9136\nEpoch  20 | Train Loss: 0.3322 | Val Loss: 0.3912 | Val AUROC: 0.9151\nEpoch  30 | Train Loss: 0.2920 | Val Loss: 0.4156 | Val AUROC: 0.9133\nEpoch  40 | Train Loss: 0.2534 | Val Loss: 0.4037 | Val AUROC: 0.9070\nEpoch  50 | Train Loss: 0.2112 | Val Loss: 0.4468 | Val AUROC: 0.9029\nEpoch  60 | Train Loss: 0.1722 | Val Loss: 0.5072 | Val AUROC: 0.9008\nEpoch  70 | Train Loss: 0.1364 | Val Loss: 0.5671 | Val AUROC: 0.8968\nEpoch  80 | Train Loss: 0.1124 | Val Loss: 0.5399 | Val AUROC: 0.8923\nEpoch  90 | Train Loss: 0.1001 | Val Loss: 0.5911 | Val AUROC: 0.8992\nEpoch 100 | Train Loss: 0.0727 | Val Loss: 0.7615 | Val AUROC: 0.8992\n\nTraining complete.\n","output_type":"stream"}],"execution_count":42},{"cell_type":"markdown","source":"As the gradual decrease of the Val AUROC indicates, the model exhibits signs of overfitting. But we will not optimize any of the hyperparameters at this stage to ensure the faithful replication of the author's model.","metadata":{}},{"cell_type":"code","source":"#  Test set evaluation \nmodel.eval()\ntest_probs, test_labels = [], []\n\nwith torch.no_grad():\n    for X_batch, y_batch in test_loader:\n        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n\n        output = model(X_batch)\n        probs = torch.softmax(output, dim=1)[:, 1]\n\n        test_probs.extend(probs.cpu().numpy())\n        test_labels.extend(y_batch.cpu().numpy())\n\ntest_auroc = roc_auc_score(test_labels, test_probs)\nprint(f\"Test AUROC: {test_auroc:.4f}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:46:12.214560Z","iopub.execute_input":"2026-04-08T20:46:12.214786Z","iopub.status.idle":"2026-04-08T20:46:12.330243Z","shell.execute_reply.started":"2026-04-08T20:46:12.214763Z","shell.execute_reply":"2026-04-08T20:46:12.329547Z"}},"outputs":[{"name":"stdout","text":"Test AUROC: 0.9061\n","output_type":"stream"}],"execution_count":43},{"cell_type":"markdown","source":"Let's compare the paper average AUROC and ours\n||AUROC |\n| :--- | :---: |\n| Paper average (56 cell types)| 0.80| \n| Our E047 test set | 0.9061 | ","metadata":{}},{"cell_type":"markdown","source":"Although we followed the preprocessing method and used the same hyperparameters, the difference in the result is expected, for many reasons:\n1. The paper reports 0.80 as an average across 56 cell types, and we trained our model on only one cell type.\n2. The genes included in the dataset may differ depending on the GTF version and filtering decisions.\n3. We had to use a different framework (PyTorch) because the paper used a deprecated one (Torch7).","metadata":{}},{"cell_type":"code","source":"# Save model weights\ntorch.save(model.state_dict(), '/kaggle/working/deepchrome_e047.pth')\nprint(\"Model saved.\")\n\n# Summary\nprint(f\"\\n── E047 Results ──────────────────────────────\")\nprint(f\"Val  AUROC (epoch 20, best): 0.9151\")\nprint(f\"Val  AUROC (epoch 100, final): 0.8992\")\nprint(f\"Test AUROC: {test_auroc:.4f}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:49:20.406361Z","iopub.execute_input":"2026-04-08T18:49:20.406603Z","iopub.status.idle":"2026-04-08T18:49:20.422559Z","shell.execute_reply.started":"2026-04-08T18:49:20.406578Z","shell.execute_reply":"2026-04-08T18:49:20.421817Z"}},"outputs":[{"name":"stdout","text":"Model saved.\n\n── E047 Results ──────────────────────────────\nVal  AUROC (epoch 20, best): 0.9151\nVal  AUROC (epoch 100, final): 0.8992\nTest AUROC: 0.9061\n","output_type":"stream"}],"execution_count":21},{"cell_type":"markdown","source":"After comparing our result to the original paper and saving the model weights, we now have room to extend our work to tune the hyperparameters to address the overfitting problem.","metadata":{}},{"cell_type":"markdown","source":"# Hyperparamter Tuning","metadata":{}},{"cell_type":"code","source":"# Reinitialize model and optimizer\ntorch.manual_seed(1)\nmodel = DeepChrome().to(device)\noptimizer = optim.SGD(model.parameters(), lr=1e-3, weight_decay=0, momentum=0)\ncriterion = nn.NLLLoss()","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:49:20.423537Z","iopub.execute_input":"2026-04-08T18:49:20.423902Z","iopub.status.idle":"2026-04-08T18:49:20.435825Z","shell.execute_reply.started":"2026-04-08T18:49:20.423867Z","shell.execute_reply":"2026-04-08T18:49:20.435302Z"}},"outputs":[],"execution_count":22},{"cell_type":"markdown","source":"# Early Stopping","metadata":{}},{"cell_type":"code","source":"#Training with Early Stopping\nn_epochs = 100\npatience = 10  \n\nbest_val_loss = float('inf')\nbest_model_weights = None\nepochs_without_improvement = 0\n\ntrain_losses, val_losses, val_aurocs = [], [], []\n\nfor epoch in range(1, n_epochs + 1):\n\n    #Train \n    model.train()\n    epoch_loss = 0.0\n\n    for X_batch, y_batch in train_loader:\n        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n\n        optimizer.zero_grad()\n        output = model(X_batch)\n        log_probs = torch.log_softmax(output, dim=1)\n        loss = criterion(log_probs, y_batch)\n        loss.backward()\n        optimizer.step()\n\n        epoch_loss += loss.item()\n\n    avg_train_loss = epoch_loss / len(train_loader)\n    train_losses.append(avg_train_loss)\n\n    #Validate \n    model.eval()\n    val_loss = 0.0\n    all_probs, all_labels = [], []\n\n    with torch.no_grad():\n        for X_batch, y_batch in val_loader:\n            X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n\n            output = model(X_batch)\n            log_probs = torch.log_softmax(output, dim=1)\n            loss = criterion(log_probs, y_batch)\n            val_loss += loss.item()\n\n            probs = torch.softmax(output, dim=1)[:, 1]\n            all_probs.extend(probs.cpu().numpy())\n            all_labels.extend(y_batch.cpu().numpy())\n\n    avg_val_loss = val_loss / len(val_loader)\n    val_losses.append(avg_val_loss)\n\n    val_auroc = roc_auc_score(all_labels, all_probs)\n    val_aurocs.append(val_auroc)\n\n    if epoch % 10 == 0:\n        print(f\"Epoch {epoch:3d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | Val AUROC: {val_auroc:.4f}\")\n\n    #Early stopping check\n    if avg_val_loss < best_val_loss:\n        best_val_loss = avg_val_loss\n        best_model_weights = model.state_dict().copy()\n        epochs_without_improvement = 0\n    else:\n        epochs_without_improvement += 1\n        if epochs_without_improvement >= patience:\n            print(f\"\\nEarly stopping at epoch {epoch} — val loss didn't improve for {patience} epochs.\")\n            break\n\n# Restore best weights\nmodel.load_state_dict(best_model_weights)\nprint(f\"Best val loss: {best_val_loss:.4f}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:49:20.436720Z","iopub.execute_input":"2026-04-08T18:49:20.436927Z","iopub.status.idle":"2026-04-08T18:54:33.728419Z","shell.execute_reply.started":"2026-04-08T18:49:20.436906Z","shell.execute_reply":"2026-04-08T18:54:33.727577Z"}},"outputs":[{"name":"stdout","text":"Epoch  10 | Train Loss: 0.3599 | Val Loss: 0.3728 | Val AUROC: 0.9136\nEpoch  20 | Train Loss: 0.3322 | Val Loss: 0.3912 | Val AUROC: 0.9151\n\nEarly stopping at epoch 27 — val loss didn't improve for 10 epochs.\nBest val loss: 0.3665\n","output_type":"stream"}],"execution_count":23},{"cell_type":"code","source":"# Test set evaluation \nmodel.eval()\ntest_probs, test_labels = [], []\n\nwith torch.no_grad():\n    for X_batch, y_batch in test_loader:\n        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n\n        output = model(X_batch)\n        probs = torch.softmax(output, dim=1)[:, 1]\n\n        test_probs.extend(probs.cpu().numpy())\n        test_labels.extend(y_batch.cpu().numpy())\n\ntest_auroc_es = roc_auc_score(test_labels, test_probs)\nprint(f\"Test AUROC with early stopping: {test_auroc_es:.4f}\")\nprint(f\"Test AUROC without early stopping: 0.9061\")\nprint(f\"Difference: {test_auroc_es - 0.9061:+.4f}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:54:33.729617Z","iopub.execute_input":"2026-04-08T18:54:33.730156Z","iopub.status.idle":"2026-04-08T18:54:33.844726Z","shell.execute_reply.started":"2026-04-08T18:54:33.730127Z","shell.execute_reply":"2026-04-08T18:54:33.844103Z"}},"outputs":[{"name":"stdout","text":"Test AUROC with early stopping: 0.9189\nTest AUROC without early stopping: 0.9061\nDifference: +0.0128\n","output_type":"stream"}],"execution_count":24},{"cell_type":"code","source":"# Save the model With the Early Stopping hyperparamter\ntorch.save(model.state_dict(), '/kaggle/working/deepchrome_e047_es.pth')\nprint(\"Early stopping model saved.\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:54:33.845627Z","iopub.execute_input":"2026-04-08T18:54:33.845934Z","iopub.status.idle":"2026-04-08T18:54:33.856703Z","shell.execute_reply.started":"2026-04-08T18:54:33.845908Z","shell.execute_reply":"2026-04-08T18:54:33.855975Z"}},"outputs":[{"name":"stdout","text":"Early stopping model saved.\n","output_type":"stream"}],"execution_count":25},{"cell_type":"markdown","source":"# Hyperparameter Optimization (Optuna)","metadata":{}},{"cell_type":"code","source":"#Installing Optuna\n!pip install optuna -q","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:54:33.857737Z","iopub.execute_input":"2026-04-08T18:54:33.858052Z","iopub.status.idle":"2026-04-08T18:54:38.048534Z","shell.execute_reply.started":"2026-04-08T18:54:33.858021Z","shell.execute_reply":"2026-04-08T18:54:38.047758Z"}},"outputs":[],"execution_count":26},{"cell_type":"code","source":"import optuna\nfrom optuna.samplers import TPESampler\n\n# Suppress Optuna's verbose trial-by-trial logs \noptuna.logging.set_verbosity(optuna.logging.WARNING)","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:54:38.049749Z","iopub.execute_input":"2026-04-08T18:54:38.050092Z","iopub.status.idle":"2026-04-08T18:54:38.444977Z","shell.execute_reply.started":"2026-04-08T18:54:38.050043Z","shell.execute_reply":"2026-04-08T18:54:38.444402Z"}},"outputs":[],"execution_count":27},{"cell_type":"code","source":"def objective(trial):\n    lr           = trial.suggest_float('lr', 1e-4, 1e-2, log=True)\n    dropout      = trial.suggest_float('dropout', 0.3, 0.7)\n    weight_decay = trial.suggest_float('weight_decay', 1e-5, 1e-3, log=True)\n    patience     = trial.suggest_int('patience', 5, 20)\n\n    #Initialize model and optimizer with suggested values\n    torch.manual_seed(1)\n    trial_model = DeepChrome(dropout_rate=dropout).to(device)\n    optimizer   = optim.SGD(trial_model.parameters(), lr=lr, weight_decay=weight_decay, momentum=0)\n    criterion   = nn.NLLLoss()\n\n    #Training loop with early stopping\n    best_val_loss = float('inf')\n    best_auroc = 0.0\n    epochs_without_improvement = 0\n\n    for epoch in range(1, 101):  \n\n        # Train\n        trial_model.train()\n        for X_batch, y_batch in train_loader:\n            X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n            optimizer.zero_grad()\n            output = trial_model(X_batch)\n            log_probs = torch.log_softmax(output, dim=1)\n            loss = criterion(log_probs, y_batch)\n            loss.backward()\n            optimizer.step()\n\n        # Validate\n        trial_model.eval()\n        val_loss = 0.0\n        all_probs, all_labels = [], []\n\n        with torch.no_grad():\n            for X_batch, y_batch in val_loader:\n                X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n                output = trial_model(X_batch)\n                log_probs = torch.log_softmax(output, dim=1)\n                val_loss += criterion(log_probs, y_batch).item()\n                probs = torch.softmax(output, dim=1)[:, 1]\n                all_probs.extend(probs.cpu().numpy())\n                all_labels.extend(y_batch.cpu().numpy())\n\n        avg_val_loss = val_loss / len(val_loader)\n        val_auroc    = roc_auc_score(all_labels, all_probs)\n\n        # Track best AUROC seen in this trial\n        if avg_val_loss < best_val_loss:\n            best_val_loss = avg_val_loss\n            best_auroc    = val_auroc\n            epochs_without_improvement = 0\n        else:\n            epochs_without_improvement += 1\n            if epochs_without_improvement >= patience:\n                break\n\n        trial.report(val_auroc, epoch)\n        if trial.should_prune():\n            raise optuna.exceptions.TrialPruned()\n\n    return best_auroc","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:22:27.153421Z","iopub.execute_input":"2026-04-08T20:22:27.153756Z","iopub.status.idle":"2026-04-08T20:22:27.166453Z","shell.execute_reply.started":"2026-04-08T20:22:27.153727Z","shell.execute_reply":"2026-04-08T20:22:27.165852Z"}},"outputs":[],"execution_count":33},{"cell_type":"code","source":"study = optuna.create_study(\n    direction='maximize',\n    sampler=TPESampler(seed=1) \n)\n\nprint(\"Starting Optuna search — 30 trials...\")\nprint(\"This will take a while. Progress prints every 5 completed trials.\\n\")\n\ndef print_callback(study, trial):\n    if trial.number % 5 == 0:\n        print(f\"Trial {trial.number:3d} | AUROC: {trial.value:.4f} | Best so far: {study.best_value:.4f} | Params: {trial.params}\")\n\nstudy.optimize(objective, n_trials=30, callbacks=[print_callback])","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T18:54:38.459814Z","iopub.execute_input":"2026-04-08T18:54:38.460076Z","iopub.status.idle":"2026-04-08T20:19:15.394310Z","shell.execute_reply.started":"2026-04-08T18:54:38.460054Z","shell.execute_reply":"2026-04-08T20:19:15.393399Z"}},"outputs":[{"name":"stdout","text":"Starting Optuna search — 30 trials...\nThis will take a while. Progress prints every 5 completed trials.\n\nTrial   0 | AUROC: 0.9163 | Best so far: 0.9163 | Params: {'lr': 0.0006824078427098838, 'dropout': 0.5881297973768632, 'weight_decay': 1.0005268542378301e-05, 'patience': 9}\nTrial   5 | AUROC: 0.8982 | Best so far: 0.9163 | Params: {'lr': 0.003994745694560914, 'dropout': 0.687304630287759, 'weight_decay': 4.2349506740680895e-05, 'patience': 16}\nTrial  10 | AUROC: 0.9137 | Best so far: 0.9163 | Params: {'lr': 0.0015035703111138698, 'dropout': 0.3692230995089278, 'weight_decay': 0.0008597863855323281, 'patience': 20}\nTrial  15 | AUROC: 0.9075 | Best so far: 0.9163 | Params: {'lr': 0.00039501709171476307, 'dropout': 0.4402141820260274, 'weight_decay': 2.9496998143186698e-05, 'patience': 20}\nTrial  20 | AUROC: 0.9083 | Best so far: 0.9163 | Params: {'lr': 0.0012856845627082403, 'dropout': 0.5548949401013914, 'weight_decay': 0.00011404982950135238, 'patience': 18}\nTrial  25 | AUROC: 0.9019 | Best so far: 0.9163 | Params: {'lr': 0.0011380727159686812, 'dropout': 0.6951514388757591, 'weight_decay': 0.00022744882559151792, 'patience': 12}\n","output_type":"stream"}],"execution_count":29},{"cell_type":"code","source":"print(\"\\n── Optuna Results ────────────────────────────────────────────\")\nprint(f\"Best AUROC:  {study.best_value:.4f}\")\nprint(f\"Best params: {study.best_params}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:19:15.395429Z","iopub.execute_input":"2026-04-08T20:19:15.395749Z","iopub.status.idle":"2026-04-08T20:19:15.400182Z","shell.execute_reply.started":"2026-04-08T20:19:15.395722Z","shell.execute_reply":"2026-04-08T20:19:15.399520Z"}},"outputs":[{"name":"stdout","text":"\n── Optuna Results ────────────────────────────────────────────\nBest AUROC:  0.9163\nBest params: {'lr': 0.0006824078427098838, 'dropout': 0.5881297973768632, 'weight_decay': 1.0005268542378301e-05, 'patience': 9}\n","output_type":"stream"}],"execution_count":30},{"cell_type":"markdown","source":"Building on the best hyperparameters of the last optimized model, the hyperparameters of the original paper were already well-chosen.","metadata":{}},{"cell_type":"code","source":"# Train final model with Optuna best params\nbest = study.best_params\n\ntorch.manual_seed(1)\nfinal_model = DeepChrome(dropout_rate=best['dropout']).to(device)\noptimizer   = optim.SGD(final_model.parameters(), lr=best['lr'], weight_decay=best['weight_decay'], momentum=0)\ncriterion   = nn.NLLLoss()\n\nbest_val_loss = float('inf')\nbest_weights  = None\nepochs_without_improvement = 0\n\nfor epoch in range(1, 101):\n\n    final_model.train()\n    for X_batch, y_batch in train_loader:\n        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n        optimizer.zero_grad()\n        output = final_model(X_batch)\n        log_probs = torch.log_softmax(output, dim=1)\n        loss = criterion(log_probs, y_batch)\n        loss.backward()\n        optimizer.step()\n\n    final_model.eval()\n    val_loss = 0.0\n    with torch.no_grad():\n        for X_batch, y_batch in val_loader:\n            X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n            output = final_model(X_batch)\n            log_probs = torch.log_softmax(output, dim=1)\n            val_loss += criterion(log_probs, y_batch).item()\n\n    avg_val_loss = val_loss / len(val_loader)\n\n    if avg_val_loss < best_val_loss:\n        best_val_loss = avg_val_loss\n        best_weights  = final_model.state_dict().copy()\n        epochs_without_improvement = 0\n    else:\n        epochs_without_improvement += 1\n        if epochs_without_improvement >= best['patience']:\n            print(f\"Early stopping at epoch {epoch}\")\n            break\n\n# Restore best weights and evaluate on test set\nfinal_model.load_state_dict(best_weights)\n\nfinal_model.eval()\ntest_probs, test_labels = [], []\nwith torch.no_grad():\n    for X_batch, y_batch in test_loader:\n        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n        probs = torch.softmax(final_model(X_batch), dim=1)[:, 1]\n        test_probs.extend(probs.cpu().numpy())\n        test_labels.extend(y_batch.cpu().numpy())\n\ntest_auroc_optuna = roc_auc_score(test_labels, test_probs)\nprint(f\"Test AUROC (Optuna best params): {test_auroc_optuna:.4f}\")\nprint(f\"Test AUROC (early stopping only): 0.9189\")\nprint(f\"Difference: {test_auroc_optuna - 0.9189:+.4f}\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:46:52.657417Z","iopub.execute_input":"2026-04-08T20:46:52.658054Z","iopub.status.idle":"2026-04-08T20:52:43.174059Z","shell.execute_reply.started":"2026-04-08T20:46:52.658011Z","shell.execute_reply":"2026-04-08T20:52:43.173208Z"}},"outputs":[{"name":"stdout","text":"Early stopping at epoch 30\nTest AUROC (Optuna best params): 0.9201\nTest AUROC (early stopping only): 0.9189\nDifference: +0.0012\n","output_type":"stream"}],"execution_count":45},{"cell_type":"code","source":"# Save final model\ntorch.save(final_model.state_dict(), '/kaggle/working/deepchrome_e047_optuna.pth')\nprint(\"Final model saved.\")","metadata":{"trusted":true,"execution":{"iopub.status.busy":"2026-04-08T20:58:22.043043Z","iopub.execute_input":"2026-04-08T20:58:22.043856Z","iopub.status.idle":"2026-04-08T20:58:22.054293Z","shell.execute_reply.started":"2026-04-08T20:58:22.043802Z","shell.execute_reply":"2026-04-08T20:58:22.053563Z"}},"outputs":[{"name":"stdout","text":"Final model saved.\n","output_type":"stream"}],"execution_count":46},{"cell_type":"markdown","source":"# Key Takeaways\n\n- After testing different combinations of the hyperparameters and obtaining nearly identical results to the one we obtained while using the author's hyperparameters, we can conclude the hyperparameters of the original paper were already well-chosen.\n## Results Summary\n\n| Configuration                        | Test AUROC |\n|--------------------------------------|------------|\n| Paper hyperparameters (100 epochs)   | 0.9061     |\n| Early stopping only                  | 0.9189     |\n| Optuna best params + early stopping  | 0.9201     |\n| Paper average (56 cell types)        | 0.8000     |\n\n# Recommendation\n\n- For future work, we recommend training the model with different cell types using the following hyperparamter combination:\n  - Learning rate: 6.82e-4\n  - Dropout: 0.588\n  - Weight decay: 1.00e-5\n  - Early stopping patience: 9","metadata":{}},{"cell_type":"code","source":"","metadata":{"trusted":true},"outputs":[],"execution_count":null}]}
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "3d0b1143",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:35.790973Z",
+     "iopub.status.busy": "2026-04-09T12:04:35.790582Z",
+     "iopub.status.idle": "2026-04-09T12:04:36.662462Z",
+     "shell.execute_reply": "2026-04-09T12:04:36.661580Z"
+    },
+    "papermill": {
+     "duration": 0.880873,
+     "end_time": "2026-04-09T12:04:36.664065+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:35.783192+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/57epigenomes.RPKM.pc/57epigenomes.RPKM.pc\n",
+      "/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K4me3_counts.txt\n",
+      "/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K27me3_counts.txt\n",
+      "/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K4me1_counts.txt\n",
+      "/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K9me3_counts.txt\n",
+      "/kaggle/input/datasets/mariamali12/deepchrome-e047-counts/counts/E047-H3K36me3_counts.txt\n",
+      "/kaggle/input/datasets/mariamali12/e047-dataset/E047_dataset.csv\n"
+     ]
+    }
+   ],
+   "source": [
+    "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+    "# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n",
+    "# For example, here's several helpful packages to load\n",
+    "\n",
+    "import numpy as np # linear algebra\n",
+    "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+    "\n",
+    "# Input data files are available in the read-only \"../input/\" directory\n",
+    "# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n",
+    "\n",
+    "import os\n",
+    "for dirname, _, filenames in os.walk('/kaggle/input'):\n",
+    "    for filename in filenames:\n",
+    "        print(os.path.join(dirname, filename))\n",
+    "\n",
+    "# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n",
+    "# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "62be6d9c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:36.679032Z",
+     "iopub.status.busy": "2026-04-09T12:04:36.678336Z",
+     "iopub.status.idle": "2026-04-09T12:04:37.556360Z",
+     "shell.execute_reply": "2026-04-09T12:04:37.554369Z"
+    },
+    "papermill": {
+     "duration": 0.888944,
+     "end_time": "2026-04-09T12:04:37.559042+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:36.670098+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',\n",
+       "       ...\n",
+       "       '491', '492', '493', '494', '495', '496', '497', '498', '499', 'label'],\n",
+       "      dtype='object', length=501)"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#import data\n",
+    "df = pd.read_csv('/kaggle/input/datasets/mariamali12/e047-dataset/E047_dataset.csv',index_col=0)\n",
+    "df.columns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "33e3363b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:37.578806Z",
+     "iopub.status.busy": "2026-04-09T12:04:37.578358Z",
+     "iopub.status.idle": "2026-04-09T12:04:37.616458Z",
+     "shell.execute_reply": "2026-04-09T12:04:37.615681Z"
+    },
+    "papermill": {
+     "duration": 0.049719,
+     "end_time": "2026-04-09T12:04:37.618220+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:37.568501+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>0</th>\n",
+       "      <th>1</th>\n",
+       "      <th>2</th>\n",
+       "      <th>3</th>\n",
+       "      <th>4</th>\n",
+       "      <th>5</th>\n",
+       "      <th>6</th>\n",
+       "      <th>7</th>\n",
+       "      <th>8</th>\n",
+       "      <th>9</th>\n",
+       "      <th>...</th>\n",
+       "      <th>491</th>\n",
+       "      <th>492</th>\n",
+       "      <th>493</th>\n",
+       "      <th>494</th>\n",
+       "      <th>495</th>\n",
+       "      <th>496</th>\n",
+       "      <th>497</th>\n",
+       "      <th>498</th>\n",
+       "      <th>499</th>\n",
+       "      <th>label</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>ENSG00000000003</th>\n",
+       "      <td>1</td>\n",
+       "      <td>4</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>4</td>\n",
+       "      <td>-1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>ENSG00000000005</th>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>5</td>\n",
+       "      <td>0</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>2</td>\n",
+       "      <td>-1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>ENSG00000000419</th>\n",
+       "      <td>1</td>\n",
+       "      <td>3</td>\n",
+       "      <td>6</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>6</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>...</td>\n",
+       "      <td>4</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>3</td>\n",
+       "      <td>4</td>\n",
+       "      <td>4</td>\n",
+       "      <td>0</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>ENSG00000000457</th>\n",
+       "      <td>2</td>\n",
+       "      <td>3</td>\n",
+       "      <td>4</td>\n",
+       "      <td>1</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>8</td>\n",
+       "      <td>2</td>\n",
+       "      <td>3</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>3</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>4</td>\n",
+       "      <td>1</td>\n",
+       "      <td>3</td>\n",
+       "      <td>2</td>\n",
+       "      <td>3</td>\n",
+       "      <td>6</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>ENSG00000000460</th>\n",
+       "      <td>3</td>\n",
+       "      <td>4</td>\n",
+       "      <td>3</td>\n",
+       "      <td>4</td>\n",
+       "      <td>2</td>\n",
+       "      <td>3</td>\n",
+       "      <td>4</td>\n",
+       "      <td>0</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0</td>\n",
+       "      <td>...</td>\n",
+       "      <td>5</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>1</td>\n",
+       "      <td>2</td>\n",
+       "      <td>6</td>\n",
+       "      <td>3</td>\n",
+       "      <td>3</td>\n",
+       "      <td>1</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "<p>5 rows × 501 columns</p>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                 0  1  2  3  4  5  6  7  8  9  ...  491  492  493  494  495  \\\n",
+       "ENSG00000000003  1  4  1  0  2  1  1  2  1  0  ...    1    2    0    2    0   \n",
+       "ENSG00000000005  0  1  0  0  1  0  0  0  0  0  ...    1    1    2    5    0   \n",
+       "ENSG00000000419  1  3  6  1  1  2  1  6  2  1  ...    4    1    0    1    3   \n",
+       "ENSG00000000457  2  3  4  1  0  1  8  2  3  0  ...    3    2    1    4    1   \n",
+       "ENSG00000000460  3  4  3  4  2  3  4  0  2  0  ...    5    1    2    1    2   \n",
+       "\n",
+       "                 496  497  498  499  label  \n",
+       "ENSG00000000003    0    1    1    4     -1  \n",
+       "ENSG00000000005    0    1    0    2     -1  \n",
+       "ENSG00000000419    4    4    0    3      1  \n",
+       "ENSG00000000457    3    2    3    6      1  \n",
+       "ENSG00000000460    6    3    3    1      1  \n",
+       "\n",
+       "[5 rows x 501 columns]"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3d42ebf8",
+   "metadata": {
+    "papermill": {
+     "duration": 0.015112,
+     "end_time": "2026-04-09T12:04:37.646864+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:37.631752+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Reforming the data to resemble the author's"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6b48c265",
+   "metadata": {
+    "papermill": {
+     "duration": 0.012486,
+     "end_time": "2026-04-09T12:04:37.671145+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:37.658659+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Actually, we are doing this step just to match the author's data shape. However, we do not need to reshape our dataset because the author has already done so to meet the requirements of the deprecated Torch7 framework, while we will be using PyTorch."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "6b425405",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:37.686667Z",
+     "iopub.status.busy": "2026-04-09T12:04:37.686401Z",
+     "iopub.status.idle": "2026-04-09T12:04:48.386408Z",
+     "shell.execute_reply": "2026-04-09T12:04:48.385675Z"
+    },
+    "papermill": {
+     "duration": 10.709552,
+     "end_time": "2026-04-09T12:04:48.388314+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:37.678762+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "rows = []\n",
+    "for gene_id, row in df.iterrows():\n",
+    "    label = row['label']\n",
+    "    # Get 500 features and reshape to (100, 5), 100 bins, 5 histone marks\n",
+    "    features = row.drop('label').values.reshape(100, 5)\n",
+    "    \n",
+    "    for bin_num in range(100):\n",
+    "        bin_features = features[bin_num]\n",
+    "        rows.append([\n",
+    "            gene_id,\n",
+    "            bin_num + 1,\n",
+    "            bin_features[0],  # H3K4me3\n",
+    "            bin_features[1],  # H3K4me1\n",
+    "            bin_features[2],  # H3K36me3\n",
+    "            bin_features[3],  # H3K9me3\n",
+    "            bin_features[4],  # H3K27me3\n",
+    "            int(label)\n",
+    "        ])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "da43d87c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-01T19:30:46.037299Z",
+     "iopub.status.busy": "2026-04-01T19:30:46.037038Z",
+     "iopub.status.idle": "2026-04-01T19:30:50.978528Z",
+     "shell.execute_reply": "2026-04-01T19:30:50.977680Z",
+     "shell.execute_reply.started": "2026-04-01T19:30:46.037271Z"
+    },
+    "papermill": {
+     "duration": 0.005565,
+     "end_time": "2026-04-09T12:04:48.400857+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:48.395292+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Create dataframe\n",
+    "authors_df = pd.DataFrame(rows, columns=[\n",
+    "    'GeneID', 'BinID',\n",
+    "    'H3K4me3', 'H3K4me1', 'H3K36me3', 'H3K9me3', 'H3K27me3',\n",
+    "    'Label'\n",
+    "])\n",
+    "\n",
+    "print(f\"Authors format shape: {authors_df.shape}\")\n",
+    "print(f\"\\nFirst few rows:\")\n",
+    "print(authors_df.head())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c450007d",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005275,
+     "end_time": "2026-04-09T12:04:48.411522+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:48.406247+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Clone the Author's DeepChrome Repo"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "e9c05043",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:48.423711Z",
+     "iopub.status.busy": "2026-04-09T12:04:48.423492Z",
+     "iopub.status.idle": "2026-04-09T12:04:50.073608Z",
+     "shell.execute_reply": "2026-04-09T12:04:50.072719Z"
+    },
+    "papermill": {
+     "duration": 1.658636,
+     "end_time": "2026-04-09T12:04:50.075516+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:48.416880+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "Cloning into 'DeepChrome'...\n",
+      "\n",
+      "\n",
+      "Repo contents:\n",
+      "  CellInfo.pdf\n",
+      "  talks\n",
+      "  README.md\n",
+      "  FeatureMaps and Barplots.zip\n",
+      "  AttentiveChrome-PyTorch\n",
+      "  LICENSE\n",
+      "  .git\n",
+      "  deepChrome-TorchCode\n"
+     ]
+    }
+   ],
+   "source": [
+    "import subprocess\n",
+    "\n",
+    "# Clone the DeepChrome repository\n",
+    "result = subprocess.run(\n",
+    "    ['git', 'clone', 'https://github.com/QData/DeepChrome.git'],\n",
+    "    capture_output=True,\n",
+    "    text=True\n",
+    ")\n",
+    "\n",
+    "print(result.stdout)\n",
+    "print(result.stderr)\n",
+    "\n",
+    "# Verify structure\n",
+    "print(\"\\nRepo contents:\")\n",
+    "for item in os.listdir('DeepChrome'):\n",
+    "    print(f\"  {item}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "56e148ad",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:50.089215Z",
+     "iopub.status.busy": "2026-04-09T12:04:50.088457Z",
+     "iopub.status.idle": "2026-04-09T12:04:50.093800Z",
+     "shell.execute_reply": "2026-04-09T12:04:50.093094Z"
+    },
+    "papermill": {
+     "duration": 0.013545,
+     "end_time": "2026-04-09T12:04:50.095204+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:50.081659+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "AttentiveChrome-PyTorch contents:\n",
+      "  README.md\n",
+      "  v2PyTorch\n",
+      "\n",
+      "deepChrome-TorchCode contents:\n",
+      "  auRoc.lua\n",
+      "  doall.lua\n",
+      "  1_data.lua\n",
+      "  5_test.lua\n",
+      "  2_model.lua\n",
+      "  data\n",
+      "  6_eval.lua\n",
+      "  7_viz.lua\n",
+      "  3_loss.lua\n",
+      "  4_train.lua\n",
+      "  doall_eval.lua\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Check the PyTorch implementation\n",
+    "print(\"AttentiveChrome-PyTorch contents:\")\n",
+    "for item in os.listdir('DeepChrome/AttentiveChrome-PyTorch'):\n",
+    "    print(f\"  {item}\")\n",
+    "\n",
+    "print(\"\\ndeepChrome-TorchCode contents:\")\n",
+    "for item in os.listdir('DeepChrome/deepChrome-TorchCode'):\n",
+    "    print(f\"  {item}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "34891ce8",
+   "metadata": {
+    "papermill": {
+     "duration": 0.00549,
+     "end_time": "2026-04-09T12:04:50.106351+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:50.100861+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "### Problem\n",
+    "The author's original code is written with Torch7, which is essentially dead, so we can't replicate the exact code.\n",
+    "So, We are going to extract the hyperparameters used in his code and build a new CNN with PyTorch."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "884ec6a9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:50.118556Z",
+     "iopub.status.busy": "2026-04-09T12:04:50.118347Z",
+     "iopub.status.idle": "2026-04-09T12:04:50.122576Z",
+     "shell.execute_reply": "2026-04-09T12:04:50.121799Z"
+    },
+    "papermill": {
+     "duration": 0.012429,
+     "end_time": "2026-04-09T12:04:50.124406+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:50.111977+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "----------------------------------------------------------------------\n",
+      "-- NN model \n",
+      "---------------------------------------------------------------------\n",
+      "require 'torch'   -- torch\n",
+      "require 'image'   -- for image transforms\n",
+      "require 'nn'      -- provides all sorts of trainable modules/layers\n",
+      "require 'math'\n",
+      "----------------------------------------------------------------------\n",
+      "print '==>DeepChrome Classification Model' \n",
+      "print '==> define parameters'\n",
+      "\n",
+      "-- Classification problem\n",
+      "noutputs = 2\n",
+      "\n",
+      "-- input dimensions\n",
+      "nfeats=5\n",
+      "width = 100\n",
+      "ninputs = nfeats*width\n",
+      "\n",
+      "-- number of hidden units (for MLP only):\n",
+      "nhiddens = ninputs / 2\n",
+      "\n",
+      "-- hidden units, filter sizes (for ConvNet only):\n",
+      "nstates = {50,625,125}\n",
+      "filtsize = 10\n",
+      "poolsize = 5\n",
+      "padding = math.floor(filtsize/2)\n",
+      "----------------------------------------------------------------------\n",
+      "print '==> construct model'\n",
+      "\n",
+      "if opt.model == 'linear' then\n",
+      "\n",
+      "   -- Simple linear model\n",
+      "   model = nn.Sequential()\n",
+      "   model:add(nn.Reshape(ninputs))\n",
+      "   model:add(nn.Linear(ninputs,noutputs))\n",
+      "\n",
+      "elseif opt.model == 'mlp' then\n",
+      "\n",
+      "   -- Simple 2-layer neural network, with tanh hidden units\n",
+      "   model = nn.Sequential()\n",
+      "   model:add(nn.Reshape(ninputs))\n",
+      "   model:add(nn.Linear(ninputs,nhiddens))\n",
+      "   model:add(nn.Tanh())\n",
+      "   model:add(nn.Linear(nhiddens,noutputs))\n",
+      "\n",
+      "elseif opt.model == 'convnet' then\n",
+      "\n",
+      "  \n",
+      "  -- a typical modern convolution network (conv+relu+pool)\n",
+      "  model = nn.Sequential()\n",
+      "\n",
+      "  -- stage 1 : filter bank -> squashing -> Max pooling\n",
+      "  model:add(nn.TemporalConvolution(nfeats, nstates[1], filtsize))\n",
+      "  model:add(nn.ReLU())\n",
+      "  model:add(nn.TemporalMaxPooling(poolsize))\n",
+      "\n",
+      "  -- stage 2 : standard 2-layer neural network\n",
+      "  model:add(nn.View(math.ceil((width-filtsize)/poolsize)*nstates[1]))\n",
+      "  model:add(nn.Dropout(0.5))\n",
+      "  model:add(nn.Linear(math.ceil((width-filtsize)/poolsize)*nstates[1], nstates[2]))\n",
+      "  model:add(nn.ReLU())\n",
+      "  model:add(nn.Linear(nstates[2], nstates[3]))\n",
+      "\n",
+      "  model:add(nn.ReLU())\n",
+      "  model:add(nn.Linear(nstates[3], noutputs))\n",
+      "\n",
+      "else\n",
+      "   error('unknown -model')\n",
+      "\n",
+      "end\n",
+      "\n",
+      "----------------------------------------------------------------------\n",
+      "print '==> here is the model:'\n",
+      "print(model)\n",
+      "\n",
+      "----------------------------------------------------------------------\n",
+      "\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Read the original Lua model file\n",
+    "with open('DeepChrome/deepChrome-TorchCode/2_model.lua', 'r') as f:\n",
+    "    print(f.read())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "43fd898c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:50.137958Z",
+     "iopub.status.busy": "2026-04-09T12:04:50.137275Z",
+     "iopub.status.idle": "2026-04-09T12:04:50.142439Z",
+     "shell.execute_reply": "2026-04-09T12:04:50.140980Z"
+    },
+    "papermill": {
+     "duration": 0.013303,
+     "end_time": "2026-04-09T12:04:50.143755+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:50.130452+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "----------------------------------------------------------------------\n",
+      "-- This script defines training procedure,\n",
+      "-- irrespective of the model/loss functions chosen.\n",
+      "--\n",
+      "-- It is used to \n",
+      "\n",
+      "--   + define a closure to estimate (a noisy) loss\n",
+      "--     function, as well as its derivatives wrt the parameters of the\n",
+      "--     model to be trained\n",
+      "--   + optimize the function, according to: SGD\n",
+      "--\n",
+      "-- Ritambhara Singh\n",
+      "----------------------------------------------------------------------\n",
+      "\n",
+      "require 'torch'   -- torch\n",
+      "require 'xlua'    -- xlua provides useful tools, like progress bars\n",
+      "require 'optim'   -- an optimization package, for online and batch methods\n",
+      "include('auRoc.lua')\n",
+      "----------------------------------------------------------------------\n",
+      "\n",
+      "print '==> loading data'\n",
+      "\n",
+      "traindataset={}\n",
+      "function traindataset:size() return opt.trsize end\n",
+      "\n",
+      "for i=1,traindataset:size() do\n",
+      "  local input = trainset[i].data;    \n",
+      "  local output = trainset[i].label;\n",
+      "  traindataset[i] = {input, output}\n",
+      "end\n",
+      "\n",
+      "testdataset={}\n",
+      "function testdataset:size() return opt.tssize end\n",
+      "\n",
+      "for i=1,testdataset:size() do\n",
+      "  local input = testset[i].data;     \n",
+      "  local output = testset[i].label;\n",
+      "  testdataset[i] = {input, output}\n",
+      "end\n",
+      "------------------------------------------------------------------------------\n",
+      "\n",
+      "print '==> defining some tools'\n",
+      "\n",
+      "--classes\n",
+      "\n",
+      "classes = {'1','2'}\n",
+      "\n",
+      "\n",
+      "-- This matrix records the current confusion across classes\n",
+      "confusion = optim.ConfusionMatrix(classes)\n",
+      "local AUC = auRoc:new()\n",
+      "local AUC_target=1\n",
+      "\n",
+      "filePath=opt.resultsDir .. opt.dataset\n",
+      "\n",
+      "-- Log results to files\n",
+      "trainLogger = optim.Logger(paths.concat(filePath, 'train.log'))\n",
+      "testLogger = optim.Logger(paths.concat(filePath, 'test.log'))\n",
+      "\n",
+      "-- Retrieve parameters and gradients:\n",
+      "-- this extracts and flattens all the trainable parameters of the mode\n",
+      "-- into a 1-dim vector\n",
+      "\n",
+      "if model then\n",
+      "   parameters,gradParameters = model:getParameters()\n",
+      "end\n",
+      "\n",
+      "----------------------------------------------------------------------\n",
+      "print '==> configuring optimizer : SGD'\n",
+      "\n",
+      "\n",
+      "optimState = {\n",
+      " \t   learningRate = opt.learningRate,\t\n",
+      "\t   weightDecay = opt.weightDecay,\n",
+      " \t   momentum = opt.momentum,\n",
+      "      \t   learningRateDecay = 1e-7\n",
+      "}\n",
+      "optimMethod = optim.sgd\n",
+      "\n",
+      "----------------------------------------------------------------------\n",
+      "print '==> defining training procedure'\n",
+      "\n",
+      "function train()\n",
+      "\n",
+      "   -- epoch tracker\n",
+      "   epoch = epoch or 1\n",
+      "\n",
+      "   -- local vars\n",
+      "   local time = sys.clock()\n",
+      "\n",
+      "   -- set model to training mode (for modules that differ in training and testing, like Dropout)\n",
+      "   model:training()\n",
+      "\n",
+      "   -- training size\n",
+      "   trsize=traindataset:size()\n",
+      "\n",
+      "   -- shuffle at each epoch\n",
+      "   shuffle = torch.randperm(trsize)\n",
+      "\n",
+      "   -- do one epoch\n",
+      "   print('==> doing epoch on training data:')\n",
+      "\n",
+      "   for t=1,traindataset:size() do\n",
+      "      -- disp progress\n",
+      "      xlua.progress(t, traindataset:size())\n",
+      "      \n",
+      "      local input = traindataset[shuffle[t]][1]\n",
+      "      local target = traindataset[shuffle[t]][2]\n",
+      "      if opt.type == 'double' then input = input:double()\n",
+      "      elseif opt.type == 'cuda' then input = input:cuda() end\n",
+      "      \n",
+      "  \n",
+      "      -- create closure to evaluate f(X) and df/dX\n",
+      "      local feval = function(x)\n",
+      "   \t -- get new parameters\n",
+      "         if x ~= parameters then\n",
+      "            parameters:copy(x)\n",
+      "         end\n",
+      "\n",
+      "\t -- reset gradients\n",
+      "   \t gradParameters:zero()\n",
+      " \n",
+      "\t\n",
+      "       \t -- estimate f\n",
+      "       \t local output = model:forward(input)\n",
+      "       \t f = criterion:forward(output,target)\n",
+      "       \t \n",
+      "       \t -- estimate df/dW\n",
+      "       \t local df_do = criterion:backward(output,target)\n",
+      "       \t model:backward(input, df_do)\n",
+      "\n",
+      "\t -- update confusion\n",
+      "         confusion:add(output,target)\n",
+      "\t print(target)\n",
+      "\t \n",
+      "\t if target == 2 then AUC_target=-1 else AUC_target=1 end\n",
+      "\t print(AUC_target)\n",
+      "\n",
+      "\t AUC:add(math.exp(output[1]), AUC_target)\n",
+      "\t \t \n",
+      "  \t -- return f and df/dX\n",
+      "       \t return f,gradParameters\n",
+      "      end\n",
+      "      optimMethod(feval, parameters, optimState)\n",
+      "   end\n",
+      " \n",
+      "\n",
+      "   -- time taken\n",
+      "   time = sys.clock() - time\n",
+      "   time = time / traindataset:size()\n",
+      "   print(\"\\n==> time to learn 1 sample = \" .. (time*1000) .. 'ms')\n",
+      "\n",
+      "   -- print confusion matrix\n",
+      "   print(confusion)\n",
+      "\n",
+      "   --Calculate and print AUC score\n",
+      "   local AUROC = AUC:calculateAuc()\n",
+      "   print(' + AUROC: '..AUROC)\n",
+      "\n",
+      "      -- save/log current net\n",
+      "   local modelname = ('model.' .. epoch .. '.net')\n",
+      "   local filename = paths.concat(filePath, modelname)\n",
+      "   os.execute('mkdir -p ' .. sys.dirname(filename))\n",
+      "   print('==> saving model to '..filename)\n",
+      "   torch.save(filename, model)\n",
+      "  \n",
+      "\n",
+      "   trainLogger:add{['AUC Score (train set)'] = AUROC}\n",
+      "\n",
+      "   -- next epoch\n",
+      "   confusion:zero()\n",
+      "   AUC:zero()\n",
+      "\n",
+      "   epoch = epoch + 1\n",
+      "end\n",
+      "\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "with open('DeepChrome/deepChrome-TorchCode/4_train.lua', 'r') as f:\n",
+    "    print(f.read())"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "030e38b4",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:50.156908Z",
+     "iopub.status.busy": "2026-04-09T12:04:50.156595Z",
+     "iopub.status.idle": "2026-04-09T12:04:50.160542Z",
+     "shell.execute_reply": "2026-04-09T12:04:50.159935Z"
+    },
+    "papermill": {
+     "duration": 0.012161,
+     "end_time": "2026-04-09T12:04:50.162233+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:50.150072+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "--------------------------------------------------------------------- \n",
+      "--\n",
+      "-- This script performs training and testing on \n",
+      "-- covnet model on a\n",
+      "-- classification problem. \n",
+      "--\n",
+      "\n",
+      "--\n",
+      "-- Ritambhara Singh\n",
+      "----------------------------------------------------------------------\n",
+      "require 'torch'\n",
+      "\n",
+      "---------------------------------------------------------------------\n",
+      "print '==> processing options'\n",
+      "\n",
+      "local set = function()\n",
+      "      cmd = torch.CmdLine()\n",
+      "      cmd:text()\n",
+      "      cmd:text('DeepChrome Pipeline options')\n",
+      "      cmd:text()\n",
+      "      cmd:text('Options:')\n",
+      "\n",
+      "      -- global:\n",
+      "      cmd:option('-seed', 1, 'fixed input seed for repeatable experiments')\n",
+      "      cmd:option('-threads', 2, 'number of threads')\n",
+      "      cmd:option('--epochs', 100, 'number of epochs')\n",
+      "      --data:\n",
+      "      cmd:option('-dataDir', \"data/\", 'The data home location')\n",
+      "      cmd:option('-dataset', \"toy/\", 'Dataset name, corresponds to the folder name in dataDir')\n",
+      "      cmd:option('-resultsDir', \"results/\", 'The data home location')\n",
+      "      cmd:option('-name', \"\", 'Optionally, give a name for this model')\n",
+      "      cmd:option('-trsize', \"10\", 'Training set size (number of genes)')\n",
+      "      cmd:option('-tssize', \"10\", 'Test set size (number of genes)')\n",
+      "\n",
+      "      --model:\n",
+      "      cmd:option('-nonlinearity', 'relu', 'type of nonlinearity function to use: tanh | relu | prelu')\n",
+      "      cmd:option('-loss', 'nll', 'type of loss function to minimize: nll')\n",
+      "      cmd:option('-model', 'convnet', 'type of model : linear|mlp|convnet')\n",
+      "      cmd:option('-nhus', '128', 'Number of hidden units in each layer')\n",
+      "      cmd:option('-ipdim', '1', 'Input dimension for spatial convolution')\n",
+      "      cmd:option('-opdim1', '6', 'Output dimension for spatial convolution')\n",
+      "      cmd:option('-opdim2', '16', 'Output dimension for spatial convolution')\n",
+      "      cmd:option('-FCnhus1', '120', 'Number of hidden units for fully connected layers')\n",
+      "      cmd:option('-FCnhus2', '84', 'Number of hidden units for fully connected layers')\n",
+      "      cmd:option('-conv_kernels', '5', 'Window size of mlp or convolution kernel sizes of conv')\n",
+      "      cmd:option('-pools', '2' , 'sizes of pooling windows')\n",
+      "\n",
+      "      -- training:\n",
+      "      cmd:option('-save', 'results', 'subdirectory to save/log experiments in')\n",
+      "      cmd:option('-plot', false, 'live plot')\n",
+      "      cmd:option('-learningRate', 1e-3, 'learning rate at t=0')\n",
+      "      cmd:option('-batchSize', 1, 'mini-batch size (1 = pure stochastic)')\n",
+      "      cmd:option('-weightDecay', 0, 'weight decay (SGD only)')\n",
+      "      cmd:option('-momentum', 0, 'momentum (SGD only)')\n",
+      "      cmd:option('-type', 'double', 'type: double | float | cuda')\n",
+      "      cmd:text()\n",
+      "      opt = cmd:parse(arg or {})\n",
+      "end\n",
+      "\n",
+      "set()\n",
+      "\n",
+      "-- nb of threads and fixed seed (for repeatable experiments)\n",
+      "\n",
+      "torch.setnumthreads(opt.threads)\n",
+      "torch.manualSeed(opt.seed)\n",
+      "\n",
+      "----------------------------------------------------------------------\n",
+      "print '==> executing all'\n",
+      "dofile '1_data.lua'\n",
+      "dofile '2_model.lua'\n",
+      "dofile '3_loss.lua'\n",
+      "dofile '4_train.lua'\n",
+      "dofile '5_test.lua'\n",
+      "\n",
+      "----------------------------------------------------------------------\n",
+      "print '==> training!'\n",
+      "local i = 1\n",
+      "\n",
+      "while i<opt.epochs do\n",
+      "   train()\n",
+      "   test()\n",
+      "   i=i+1\n",
+      "end\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "with open('DeepChrome/deepChrome-TorchCode/doall.lua', 'r') as f:\n",
+    "    print(f.read())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5d535aab",
+   "metadata": {
+    "papermill": {
+     "duration": 0.005979,
+     "end_time": "2026-04-09T12:04:50.174498+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:50.168519+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Building the CNN"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "185954bf",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:50.187776Z",
+     "iopub.status.busy": "2026-04-09T12:04:50.187566Z",
+     "iopub.status.idle": "2026-04-09T12:04:56.429462Z",
+     "shell.execute_reply": "2026-04-09T12:04:56.428807Z"
+    },
+    "papermill": {
+     "duration": 6.250952,
+     "end_time": "2026-04-09T12:04:56.431405+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:50.180453+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import torch\n",
+    "import torch.nn as nn\n",
+    "import torch.optim as optim\n",
+    "from torch.utils.data import DataLoader, TensorDataset\n",
+    "from sklearn.metrics import roc_auc_score\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "import numpy as np\n",
+    "\n",
+    "# Set seed for reproducibility\n",
+    "torch.manual_seed(1)\n",
+    "np.random.seed(1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "c29e7413",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:56.445905Z",
+     "iopub.status.busy": "2026-04-09T12:04:56.445516Z",
+     "iopub.status.idle": "2026-04-09T12:04:56.451402Z",
+     "shell.execute_reply": "2026-04-09T12:04:56.450791Z"
+    },
+    "papermill": {
+     "duration": 0.014608,
+     "end_time": "2026-04-09T12:04:56.452835+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.438227+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "#CNN Model\n",
+    "class DeepChrome(nn.Module):\n",
+    "    def __init__(self, dropout_rate=0.5):\n",
+    "        super(DeepChrome, self).__init__()\n",
+    "        self.conv = nn.Sequential(\n",
+    "            nn.Conv1d(in_channels=5, out_channels=50, kernel_size=10),\n",
+    "            nn.ReLU(),\n",
+    "            nn.MaxPool1d(kernel_size=5)\n",
+    "        )\n",
+    "        self.fc = nn.Sequential(\n",
+    "            nn.Dropout(dropout_rate),\n",
+    "            nn.Linear(900, 625),\n",
+    "            nn.ReLU(),\n",
+    "            nn.Linear(625, 125),\n",
+    "            nn.ReLU(),\n",
+    "            nn.Linear(125, 2)\n",
+    "        )\n",
+    "    def forward(self, x):\n",
+    "        x = self.conv(x)\n",
+    "        x = x.view(x.size(0), -1)\n",
+    "        x = self.fc(x)\n",
+    "        return x"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "f2ede65b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:56.465947Z",
+     "iopub.status.busy": "2026-04-09T12:04:56.465716Z",
+     "iopub.status.idle": "2026-04-09T12:04:56.495137Z",
+     "shell.execute_reply": "2026-04-09T12:04:56.494263Z"
+    },
+    "papermill": {
+     "duration": 0.03753,
+     "end_time": "2026-04-09T12:04:56.496538+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.459008+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "DeepChrome(\n",
+      "  (conv): Sequential(\n",
+      "    (0): Conv1d(5, 50, kernel_size=(10,), stride=(1,))\n",
+      "    (1): ReLU()\n",
+      "    (2): MaxPool1d(kernel_size=5, stride=5, padding=0, dilation=1, ceil_mode=False)\n",
+      "  )\n",
+      "  (fc): Sequential(\n",
+      "    (0): Dropout(p=0.5, inplace=False)\n",
+      "    (1): Linear(in_features=900, out_features=625, bias=True)\n",
+      "    (2): ReLU()\n",
+      "    (3): Linear(in_features=625, out_features=125, bias=True)\n",
+      "    (4): ReLU()\n",
+      "    (5): Linear(in_features=125, out_features=2, bias=True)\n",
+      "  )\n",
+      ")\n",
+      "\n",
+      "Total parameters: 644,177\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Verify model structure\n",
+    "model = DeepChrome()\n",
+    "print(model)\n",
+    "print(f\"\\nTotal parameters: {sum(p.numel() for p in model.parameters()):,}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "c2a6dc31",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:56.510262Z",
+     "iopub.status.busy": "2026-04-09T12:04:56.509729Z",
+     "iopub.status.idle": "2026-04-09T12:04:56.604119Z",
+     "shell.execute_reply": "2026-04-09T12:04:56.603347Z"
+    },
+    "papermill": {
+     "duration": 0.102805,
+     "end_time": "2026-04-09T12:04:56.605593+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.502788+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Output shape: torch.Size([1, 2])\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Test with dummy input\n",
+    "dummy = torch.randn(1, 5, 100)\n",
+    "out = model(dummy)\n",
+    "print(f\"Output shape: {out.shape}\") "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "54d1a5c2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:56.620558Z",
+     "iopub.status.busy": "2026-04-09T12:04:56.619816Z",
+     "iopub.status.idle": "2026-04-09T12:04:56.650501Z",
+     "shell.execute_reply": "2026-04-09T12:04:56.649626Z"
+    },
+    "papermill": {
+     "duration": 0.039806,
+     "end_time": "2026-04-09T12:04:56.652069+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.612263+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Label distribution: [9534 9766]\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Separate features and labels\n",
+    "X = df.drop(columns=['label']).values  # (19300, 500)\n",
+    "y = df['label'].values                 # (19300,) — +1 / -1\n",
+    "\n",
+    "# Convert +1/-1 (paper convention) → 1/0 (required by PyTorch NLLLoss)\n",
+    "y = ((y + 1) // 2).astype(int)\n",
+    "print(f\"Label distribution: {np.bincount(y)}\")  # expect ~[9534, 9766]\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "0152c15b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:56.666829Z",
+     "iopub.status.busy": "2026-04-09T12:04:56.666462Z",
+     "iopub.status.idle": "2026-04-09T12:04:56.671161Z",
+     "shell.execute_reply": "2026-04-09T12:04:56.670233Z"
+    },
+    "papermill": {
+     "duration": 0.013622,
+     "end_time": "2026-04-09T12:04:56.672682+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.659060+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Feature shape: (19300, 5, 100)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Reshape to (19300, 5, 100) \n",
+    "# CSV layout: columns are [bin1_mark1..5, bin2_mark1..5, ..., bin100_mark1..5]\n",
+    "X = X.reshape(-1, 100, 5).transpose(0, 2, 1)  # (19300, 5, 100)\n",
+    "print(f\"Feature shape: {X.shape}\")  # expect (19300, 5, 100)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "409bc268",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:56.687865Z",
+     "iopub.status.busy": "2026-04-09T12:04:56.687364Z",
+     "iopub.status.idle": "2026-04-09T12:04:56.794071Z",
+     "shell.execute_reply": "2026-04-09T12:04:56.793140Z"
+    },
+    "papermill": {
+     "duration": 0.115562,
+     "end_time": "2026-04-09T12:04:56.795675+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.680113+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Train: (6601, 5, 100), Val: (6601, 5, 100), Test: (6098, 5, 100)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Randomized train / val / test split\n",
+    "np.random.seed(1)\n",
+    "indices = np.random.permutation(len(X))\n",
+    "\n",
+    "train_idx = indices[:6601]\n",
+    "val_idx   = indices[6601:13202]\n",
+    "test_idx  = indices[13202:]\n",
+    "\n",
+    "X_train, y_train = X[train_idx], y[train_idx]\n",
+    "X_val,   y_val   = X[val_idx],   y[val_idx]\n",
+    "X_test,  y_test  = X[test_idx],  y[test_idx]\n",
+    "\n",
+    "print(f\"Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "7fba05b5",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:56.810997Z",
+     "iopub.status.busy": "2026-04-09T12:04:56.810681Z",
+     "iopub.status.idle": "2026-04-09T12:04:56.834731Z",
+     "shell.execute_reply": "2026-04-09T12:04:56.834119Z"
+    },
+    "papermill": {
+     "duration": 0.033636,
+     "end_time": "2026-04-09T12:04:56.836166+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.802530+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from torch.utils.data import Dataset, DataLoader\n",
+    "# PyTorch Dataset \n",
+    "class GeneDataset(Dataset):\n",
+    "    def __init__(self, X, y):\n",
+    "        self.X = torch.tensor(X, dtype=torch.float32)\n",
+    "        self.y = torch.tensor(y, dtype=torch.long)\n",
+    "\n",
+    "    def __len__(self):\n",
+    "        return len(self.X)\n",
+    "\n",
+    "    def __getitem__(self, idx):\n",
+    "        return self.X[idx], self.y[idx]\n",
+    "#  DataLoaders\n",
+    "train_loader = DataLoader(GeneDataset(X_train, y_train), batch_size=1,  shuffle=True)\n",
+    "val_loader   = DataLoader(GeneDataset(X_val,   y_val),   batch_size=64, shuffle=False)\n",
+    "test_loader  = DataLoader(GeneDataset(X_test,  y_test),  batch_size=64, shuffle=False)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d38ee4ae",
+   "metadata": {
+    "papermill": {
+     "duration": 0.00739,
+     "end_time": "2026-04-09T12:04:56.851737+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.844347+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Training"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "be4aa921",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:04:56.865527Z",
+     "iopub.status.busy": "2026-04-09T12:04:56.865187Z",
+     "iopub.status.idle": "2026-04-09T12:05:02.443691Z",
+     "shell.execute_reply": "2026-04-09T12:05:02.442794Z"
+    },
+    "papermill": {
+     "duration": 5.58756,
+     "end_time": "2026-04-09T12:05:02.445602+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:04:56.858042+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Using device: cuda\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Setup \n",
+    "device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\n",
+    "print(f\"Using device: {device}\")\n",
+    "\n",
+    "# setting a seed matching the same seed the author selected\n",
+    "torch.manual_seed(1)\n",
+    "#moving the model's parameters to the GPU\n",
+    "model = DeepChrome().to(device)\n",
+    "#using the same optimizer and criterion as the author's\n",
+    "optimizer = optim.SGD(model.parameters(), lr=1e-3, weight_decay=0, momentum=0)\n",
+    "criterion = nn.NLLLoss()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "a84cd70b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:05:02.462804Z",
+     "iopub.status.busy": "2026-04-09T12:05:02.462019Z",
+     "iopub.status.idle": "2026-04-09T12:24:26.299848Z",
+     "shell.execute_reply": "2026-04-09T12:24:26.299130Z"
+    },
+    "papermill": {
+     "duration": 1163.855531,
+     "end_time": "2026-04-09T12:24:26.308558+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:05:02.453027+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch  10 | Train Loss: 0.3599 | Val Loss: 0.3728 | Val AUROC: 0.9136\n",
+      "Epoch  20 | Train Loss: 0.3322 | Val Loss: 0.3912 | Val AUROC: 0.9151\n",
+      "Epoch  30 | Train Loss: 0.2920 | Val Loss: 0.4156 | Val AUROC: 0.9133\n",
+      "Epoch  40 | Train Loss: 0.2534 | Val Loss: 0.4037 | Val AUROC: 0.9070\n",
+      "Epoch  50 | Train Loss: 0.2112 | Val Loss: 0.4468 | Val AUROC: 0.9029\n",
+      "Epoch  60 | Train Loss: 0.1722 | Val Loss: 0.5072 | Val AUROC: 0.9008\n",
+      "Epoch  70 | Train Loss: 0.1364 | Val Loss: 0.5671 | Val AUROC: 0.8968\n",
+      "Epoch  80 | Train Loss: 0.1124 | Val Loss: 0.5399 | Val AUROC: 0.8923\n",
+      "Epoch  90 | Train Loss: 0.1001 | Val Loss: 0.5911 | Val AUROC: 0.8992\n",
+      "Epoch 100 | Train Loss: 0.0727 | Val Loss: 0.7615 | Val AUROC: 0.8992\n",
+      "\n",
+      "Training complete.\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Training loop\n",
+    "n_epochs = 100\n",
+    "train_losses, val_losses, val_aurocs = [], [], []\n",
+    "\n",
+    "for epoch in range(1, n_epochs + 1):\n",
+    "\n",
+    "    #Train \n",
+    "    model.train()\n",
+    "    epoch_loss = 0.0\n",
+    "\n",
+    "    for X_batch, y_batch in train_loader:\n",
+    "        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "\n",
+    "        optimizer.zero_grad()\n",
+    "        output = model(X_batch)         \n",
+    "        log_probs = torch.log_softmax(output, dim=1)  \n",
+    "        loss = criterion(log_probs, y_batch)\n",
+    "        loss.backward()\n",
+    "        optimizer.step()\n",
+    "\n",
+    "        epoch_loss += loss.item()\n",
+    "\n",
+    "    avg_train_loss = epoch_loss / len(train_loader)\n",
+    "    train_losses.append(avg_train_loss)\n",
+    "\n",
+    "    # Validate\n",
+    "    model.eval()\n",
+    "    val_loss = 0.0\n",
+    "    all_probs, all_labels = [], []\n",
+    "\n",
+    "    with torch.no_grad():\n",
+    "        for X_batch, y_batch in val_loader:\n",
+    "            X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "\n",
+    "            output = model(X_batch)\n",
+    "            log_probs = torch.log_softmax(output, dim=1)\n",
+    "            loss = criterion(log_probs, y_batch)\n",
+    "            val_loss += loss.item()\n",
+    "\n",
+    "            probs = torch.softmax(output, dim=1)[:, 1]  \n",
+    "            all_probs.extend(probs.cpu().numpy())\n",
+    "            all_labels.extend(y_batch.cpu().numpy())\n",
+    "\n",
+    "    avg_val_loss = val_loss / len(val_loader)\n",
+    "    val_losses.append(avg_val_loss)\n",
+    "\n",
+    "    val_auroc = roc_auc_score(all_labels, all_probs)\n",
+    "    val_aurocs.append(val_auroc)\n",
+    "\n",
+    "    if epoch % 10 == 0:\n",
+    "        print(f\"Epoch {epoch:3d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | Val AUROC: {val_auroc:.4f}\")\n",
+    "\n",
+    "print(\"\\nTraining complete.\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c4e2b027",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006683,
+     "end_time": "2026-04-09T12:24:26.321856+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.315173+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "As the gradual decrease of the Val AUROC indicates, the model exhibits signs of overfitting. But we will not optimize any of the hyperparameters at this stage to ensure the faithful replication of the author's model."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "9a32ceba",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:24:26.336942Z",
+     "iopub.status.busy": "2026-04-09T12:24:26.336319Z",
+     "iopub.status.idle": "2026-04-09T12:24:26.449619Z",
+     "shell.execute_reply": "2026-04-09T12:24:26.448795Z"
+    },
+    "papermill": {
+     "duration": 0.122358,
+     "end_time": "2026-04-09T12:24:26.451148+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.328790+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Test AUROC: 0.9061\n"
+     ]
+    }
+   ],
+   "source": [
+    "#  Test set evaluation \n",
+    "model.eval()\n",
+    "test_probs, test_labels = [], []\n",
+    "\n",
+    "with torch.no_grad():\n",
+    "    for X_batch, y_batch in test_loader:\n",
+    "        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "\n",
+    "        output = model(X_batch)\n",
+    "        probs = torch.softmax(output, dim=1)[:, 1]\n",
+    "\n",
+    "        test_probs.extend(probs.cpu().numpy())\n",
+    "        test_labels.extend(y_batch.cpu().numpy())\n",
+    "\n",
+    "test_auroc = roc_auc_score(test_labels, test_probs)\n",
+    "print(f\"Test AUROC: {test_auroc:.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "30e85fb0",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006358,
+     "end_time": "2026-04-09T12:24:26.464710+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.458352+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Let's compare the paper average AUROC and ours\n",
+    "||AUROC |\n",
+    "| :--- | :---: |\n",
+    "| Paper average (56 cell types)| 0.80| \n",
+    "| Our E047 test set | 0.9061 | "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "405f1f3a",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006679,
+     "end_time": "2026-04-09T12:24:26.478016+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.471337+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Although we followed the preprocessing method and used the same hyperparameters, the difference in the result is expected, for many reasons:\n",
+    "1. The paper reports 0.80 as an average across 56 cell types, and we trained our model on only one cell type.\n",
+    "2. The genes included in the dataset may differ depending on the GTF version and filtering decisions.\n",
+    "3. We had to use a different framework (PyTorch) because the paper used a deprecated one (Torch7)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "95684f2d",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:24:26.493043Z",
+     "iopub.status.busy": "2026-04-09T12:24:26.492754Z",
+     "iopub.status.idle": "2026-04-09T12:24:26.516256Z",
+     "shell.execute_reply": "2026-04-09T12:24:26.515374Z"
+    },
+    "papermill": {
+     "duration": 0.033093,
+     "end_time": "2026-04-09T12:24:26.518122+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.485029+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Model saved.\n",
+      "\n",
+      "── E047 Results ──────────────────────────────\n",
+      "Val  AUROC (epoch 20, best): 0.9151\n",
+      "Val  AUROC (epoch 100, final): 0.8992\n",
+      "Test AUROC: 0.9061\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Save model weights\n",
+    "torch.save(model.state_dict(), '/kaggle/working/deepchrome_e047.pth')\n",
+    "print(\"Model saved.\")\n",
+    "\n",
+    "# Summary\n",
+    "print(f\"\\n── E047 Results ──────────────────────────────\")\n",
+    "print(f\"Val  AUROC (epoch 20, best): 0.9151\")\n",
+    "print(f\"Val  AUROC (epoch 100, final): 0.8992\")\n",
+    "print(f\"Test AUROC: {test_auroc:.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9e09fbb2",
+   "metadata": {
+    "papermill": {
+     "duration": 0.007046,
+     "end_time": "2026-04-09T12:24:26.532588+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.525542+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "After comparing our result to the original paper and saving the model weights, we now have room to extend our work to tune the hyperparameters to address the overfitting problem."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a3d100a9",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006901,
+     "end_time": "2026-04-09T12:24:26.546459+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.539558+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Hyperparamter Tuning"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "02088360",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:24:26.561111Z",
+     "iopub.status.busy": "2026-04-09T12:24:26.560845Z",
+     "iopub.status.idle": "2026-04-09T12:24:26.575364Z",
+     "shell.execute_reply": "2026-04-09T12:24:26.574778Z"
+    },
+    "papermill": {
+     "duration": 0.02329,
+     "end_time": "2026-04-09T12:24:26.576768+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.553478+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Reinitialize model and optimizer\n",
+    "torch.manual_seed(1)\n",
+    "model = DeepChrome().to(device)\n",
+    "optimizer = optim.SGD(model.parameters(), lr=1e-3, weight_decay=0, momentum=0)\n",
+    "criterion = nn.NLLLoss()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c798149a",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006617,
+     "end_time": "2026-04-09T12:24:26.590127+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.583510+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Early Stopping"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "2b1467de",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:24:26.605823Z",
+     "iopub.status.busy": "2026-04-09T12:24:26.605601Z",
+     "iopub.status.idle": "2026-04-09T12:29:37.725074Z",
+     "shell.execute_reply": "2026-04-09T12:29:37.724301Z"
+    },
+    "papermill": {
+     "duration": 311.137314,
+     "end_time": "2026-04-09T12:29:37.734770+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:24:26.597456+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch  10 | Train Loss: 0.3599 | Val Loss: 0.3728 | Val AUROC: 0.9136\n",
+      "Epoch  20 | Train Loss: 0.3322 | Val Loss: 0.3912 | Val AUROC: 0.9151\n",
+      "\n",
+      "Early stopping at epoch 27 — val loss didn't improve for 10 epochs.\n",
+      "Best val loss: 0.3665\n"
+     ]
+    }
+   ],
+   "source": [
+    "#Training with Early Stopping\n",
+    "n_epochs = 100\n",
+    "patience = 10  \n",
+    "\n",
+    "best_val_loss = float('inf')\n",
+    "best_model_weights = None\n",
+    "epochs_without_improvement = 0\n",
+    "\n",
+    "train_losses, val_losses, val_aurocs = [], [], []\n",
+    "\n",
+    "for epoch in range(1, n_epochs + 1):\n",
+    "\n",
+    "    #Train \n",
+    "    model.train()\n",
+    "    epoch_loss = 0.0\n",
+    "\n",
+    "    for X_batch, y_batch in train_loader:\n",
+    "        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "\n",
+    "        optimizer.zero_grad()\n",
+    "        output = model(X_batch)\n",
+    "        log_probs = torch.log_softmax(output, dim=1)\n",
+    "        loss = criterion(log_probs, y_batch)\n",
+    "        loss.backward()\n",
+    "        optimizer.step()\n",
+    "\n",
+    "        epoch_loss += loss.item()\n",
+    "\n",
+    "    avg_train_loss = epoch_loss / len(train_loader)\n",
+    "    train_losses.append(avg_train_loss)\n",
+    "\n",
+    "    #Validate \n",
+    "    model.eval()\n",
+    "    val_loss = 0.0\n",
+    "    all_probs, all_labels = [], []\n",
+    "\n",
+    "    with torch.no_grad():\n",
+    "        for X_batch, y_batch in val_loader:\n",
+    "            X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "\n",
+    "            output = model(X_batch)\n",
+    "            log_probs = torch.log_softmax(output, dim=1)\n",
+    "            loss = criterion(log_probs, y_batch)\n",
+    "            val_loss += loss.item()\n",
+    "\n",
+    "            probs = torch.softmax(output, dim=1)[:, 1]\n",
+    "            all_probs.extend(probs.cpu().numpy())\n",
+    "            all_labels.extend(y_batch.cpu().numpy())\n",
+    "\n",
+    "    avg_val_loss = val_loss / len(val_loader)\n",
+    "    val_losses.append(avg_val_loss)\n",
+    "\n",
+    "    val_auroc = roc_auc_score(all_labels, all_probs)\n",
+    "    val_aurocs.append(val_auroc)\n",
+    "\n",
+    "    if epoch % 10 == 0:\n",
+    "        print(f\"Epoch {epoch:3d} | Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f} | Val AUROC: {val_auroc:.4f}\")\n",
+    "\n",
+    "    #Early stopping check\n",
+    "    if avg_val_loss < best_val_loss:\n",
+    "        best_val_loss = avg_val_loss\n",
+    "        best_model_weights = model.state_dict().copy()\n",
+    "        epochs_without_improvement = 0\n",
+    "    else:\n",
+    "        epochs_without_improvement += 1\n",
+    "        if epochs_without_improvement >= patience:\n",
+    "            print(f\"\\nEarly stopping at epoch {epoch} — val loss didn't improve for {patience} epochs.\")\n",
+    "            break\n",
+    "\n",
+    "# Restore best weights\n",
+    "model.load_state_dict(best_model_weights)\n",
+    "print(f\"Best val loss: {best_val_loss:.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "8032851f",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:29:37.749690Z",
+     "iopub.status.busy": "2026-04-09T12:29:37.749453Z",
+     "iopub.status.idle": "2026-04-09T12:29:37.865809Z",
+     "shell.execute_reply": "2026-04-09T12:29:37.864874Z"
+    },
+    "papermill": {
+     "duration": 0.125797,
+     "end_time": "2026-04-09T12:29:37.867460+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:29:37.741663+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Test AUROC with early stopping: 0.9189\n",
+      "Test AUROC without early stopping: 0.9061\n",
+      "Difference: +0.0128\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Test set evaluation \n",
+    "model.eval()\n",
+    "test_probs, test_labels = [], []\n",
+    "\n",
+    "with torch.no_grad():\n",
+    "    for X_batch, y_batch in test_loader:\n",
+    "        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "\n",
+    "        output = model(X_batch)\n",
+    "        probs = torch.softmax(output, dim=1)[:, 1]\n",
+    "\n",
+    "        test_probs.extend(probs.cpu().numpy())\n",
+    "        test_labels.extend(y_batch.cpu().numpy())\n",
+    "\n",
+    "test_auroc_es = roc_auc_score(test_labels, test_probs)\n",
+    "print(f\"Test AUROC with early stopping: {test_auroc_es:.4f}\")\n",
+    "print(f\"Test AUROC without early stopping: 0.9061\")\n",
+    "print(f\"Difference: {test_auroc_es - 0.9061:+.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "234458b1",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:29:37.883588Z",
+     "iopub.status.busy": "2026-04-09T12:29:37.883069Z",
+     "iopub.status.idle": "2026-04-09T12:29:37.893817Z",
+     "shell.execute_reply": "2026-04-09T12:29:37.892804Z"
+    },
+    "papermill": {
+     "duration": 0.020212,
+     "end_time": "2026-04-09T12:29:37.895391+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:29:37.875179+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Early stopping model saved.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Save the model With the Early Stopping hyperparamter\n",
+    "torch.save(model.state_dict(), '/kaggle/working/deepchrome_e047_es.pth')\n",
+    "print(\"Early stopping model saved.\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8c231c53",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006678,
+     "end_time": "2026-04-09T12:29:37.909417+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:29:37.902739+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Hyperparameter Optimization (Optuna)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "f089b610",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:29:37.924304Z",
+     "iopub.status.busy": "2026-04-09T12:29:37.923842Z",
+     "iopub.status.idle": "2026-04-09T12:29:42.634671Z",
+     "shell.execute_reply": "2026-04-09T12:29:42.633522Z"
+    },
+    "papermill": {
+     "duration": 4.720371,
+     "end_time": "2026-04-09T12:29:42.636544+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:29:37.916173+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "#Installing Optuna\n",
+    "!pip install optuna -q"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "dd63f64c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:29:42.652317Z",
+     "iopub.status.busy": "2026-04-09T12:29:42.651574Z",
+     "iopub.status.idle": "2026-04-09T12:29:43.072844Z",
+     "shell.execute_reply": "2026-04-09T12:29:43.072270Z"
+    },
+    "papermill": {
+     "duration": 0.431023,
+     "end_time": "2026-04-09T12:29:43.074585+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:29:42.643562+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "import optuna\n",
+    "from optuna.samplers import TPESampler\n",
+    "\n",
+    "# Suppress Optuna's verbose trial-by-trial logs \n",
+    "optuna.logging.set_verbosity(optuna.logging.WARNING)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "id": "4ea3ce1a",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:29:43.091086Z",
+     "iopub.status.busy": "2026-04-09T12:29:43.090637Z",
+     "iopub.status.idle": "2026-04-09T12:29:43.099423Z",
+     "shell.execute_reply": "2026-04-09T12:29:43.098828Z"
+    },
+    "papermill": {
+     "duration": 0.018726,
+     "end_time": "2026-04-09T12:29:43.100815+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:29:43.082089+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def objective(trial):\n",
+    "    lr           = trial.suggest_float('lr', 1e-4, 1e-2, log=True)\n",
+    "    dropout      = trial.suggest_float('dropout', 0.3, 0.7)\n",
+    "    weight_decay = trial.suggest_float('weight_decay', 1e-5, 1e-3, log=True)\n",
+    "    patience     = trial.suggest_int('patience', 5, 20)\n",
+    "\n",
+    "    #Initialize model and optimizer with suggested values\n",
+    "    torch.manual_seed(1)\n",
+    "    trial_model = DeepChrome(dropout_rate=dropout).to(device)\n",
+    "    optimizer   = optim.SGD(trial_model.parameters(), lr=lr, weight_decay=weight_decay, momentum=0)\n",
+    "    criterion   = nn.NLLLoss()\n",
+    "\n",
+    "    #Training loop with early stopping\n",
+    "    best_val_loss = float('inf')\n",
+    "    best_auroc = 0.0\n",
+    "    epochs_without_improvement = 0\n",
+    "\n",
+    "    for epoch in range(1, 101):  \n",
+    "\n",
+    "        # Train\n",
+    "        trial_model.train()\n",
+    "        for X_batch, y_batch in train_loader:\n",
+    "            X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "            optimizer.zero_grad()\n",
+    "            output = trial_model(X_batch)\n",
+    "            log_probs = torch.log_softmax(output, dim=1)\n",
+    "            loss = criterion(log_probs, y_batch)\n",
+    "            loss.backward()\n",
+    "            optimizer.step()\n",
+    "\n",
+    "        # Validate\n",
+    "        trial_model.eval()\n",
+    "        val_loss = 0.0\n",
+    "        all_probs, all_labels = [], []\n",
+    "\n",
+    "        with torch.no_grad():\n",
+    "            for X_batch, y_batch in val_loader:\n",
+    "                X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "                output = trial_model(X_batch)\n",
+    "                log_probs = torch.log_softmax(output, dim=1)\n",
+    "                val_loss += criterion(log_probs, y_batch).item()\n",
+    "                probs = torch.softmax(output, dim=1)[:, 1]\n",
+    "                all_probs.extend(probs.cpu().numpy())\n",
+    "                all_labels.extend(y_batch.cpu().numpy())\n",
+    "\n",
+    "        avg_val_loss = val_loss / len(val_loader)\n",
+    "        val_auroc    = roc_auc_score(all_labels, all_probs)\n",
+    "\n",
+    "        # Track best AUROC seen in this trial\n",
+    "        if avg_val_loss < best_val_loss:\n",
+    "            best_val_loss = avg_val_loss\n",
+    "            best_auroc    = val_auroc\n",
+    "            epochs_without_improvement = 0\n",
+    "        else:\n",
+    "            epochs_without_improvement += 1\n",
+    "            if epochs_without_improvement >= patience:\n",
+    "                break\n",
+    "\n",
+    "        trial.report(val_auroc, epoch)\n",
+    "        if trial.should_prune():\n",
+    "            raise optuna.exceptions.TrialPruned()\n",
+    "\n",
+    "    return best_auroc"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "676175c9",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T12:29:43.116376Z",
+     "iopub.status.busy": "2026-04-09T12:29:43.115971Z",
+     "iopub.status.idle": "2026-04-09T13:56:22.394897Z",
+     "shell.execute_reply": "2026-04-09T13:56:22.394233Z"
+    },
+    "papermill": {
+     "duration": 5199.2889,
+     "end_time": "2026-04-09T13:56:22.397092+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T12:29:43.108192+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Starting Optuna search — 30 trials...\n",
+      "This will take a while. Progress prints every 5 completed trials.\n",
+      "\n",
+      "Trial   0 | AUROC: 0.9163 | Best so far: 0.9163 | Params: {'lr': 0.0006824078427098838, 'dropout': 0.5881297973768632, 'weight_decay': 1.0005268542378301e-05, 'patience': 9}\n",
+      "Trial   5 | AUROC: 0.8982 | Best so far: 0.9163 | Params: {'lr': 0.003994745694560914, 'dropout': 0.687304630287759, 'weight_decay': 4.2349506740680895e-05, 'patience': 16}\n",
+      "Trial  10 | AUROC: 0.9137 | Best so far: 0.9163 | Params: {'lr': 0.0015035703111138698, 'dropout': 0.3692230995089278, 'weight_decay': 0.0008597863855323281, 'patience': 20}\n",
+      "Trial  15 | AUROC: 0.9075 | Best so far: 0.9163 | Params: {'lr': 0.00039501709171476307, 'dropout': 0.4402141820260274, 'weight_decay': 2.9496998143186698e-05, 'patience': 20}\n",
+      "Trial  20 | AUROC: 0.9083 | Best so far: 0.9163 | Params: {'lr': 0.0012856845627082403, 'dropout': 0.5548949401013914, 'weight_decay': 0.00011404982950135238, 'patience': 18}\n",
+      "Trial  25 | AUROC: 0.9019 | Best so far: 0.9163 | Params: {'lr': 0.0011380727159686812, 'dropout': 0.6951514388757591, 'weight_decay': 0.00022744882559151792, 'patience': 12}\n"
+     ]
+    }
+   ],
+   "source": [
+    "study = optuna.create_study(\n",
+    "    direction='maximize',\n",
+    "    sampler=TPESampler(seed=1) \n",
+    ")\n",
+    "\n",
+    "print(\"Starting Optuna search — 30 trials...\")\n",
+    "print(\"This will take a while. Progress prints every 5 completed trials.\\n\")\n",
+    "\n",
+    "def print_callback(study, trial):\n",
+    "    if trial.number % 5 == 0:\n",
+    "        print(f\"Trial {trial.number:3d} | AUROC: {trial.value:.4f} | Best so far: {study.best_value:.4f} | Params: {trial.params}\")\n",
+    "\n",
+    "study.optimize(objective, n_trials=30, callbacks=[print_callback])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "id": "4ea588ce",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T13:56:22.413810Z",
+     "iopub.status.busy": "2026-04-09T13:56:22.413061Z",
+     "iopub.status.idle": "2026-04-09T13:56:22.418220Z",
+     "shell.execute_reply": "2026-04-09T13:56:22.417397Z"
+    },
+    "papermill": {
+     "duration": 0.014576,
+     "end_time": "2026-04-09T13:56:22.419604+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T13:56:22.405028+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "── Optuna Results ────────────────────────────────────────────\n",
+      "Best AUROC:  0.9163\n",
+      "Best params: {'lr': 0.0006824078427098838, 'dropout': 0.5881297973768632, 'weight_decay': 1.0005268542378301e-05, 'patience': 9}\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"\\n── Optuna Results ────────────────────────────────────────────\")\n",
+    "print(f\"Best AUROC:  {study.best_value:.4f}\")\n",
+    "print(f\"Best params: {study.best_params}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a92bc6ee",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006992,
+     "end_time": "2026-04-09T13:56:22.433822+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T13:56:22.426830+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "Building on the best hyperparameters of the last optimized model, the hyperparameters of the original paper were already well-chosen."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "id": "86bf669e",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T13:56:22.449577Z",
+     "iopub.status.busy": "2026-04-09T13:56:22.449101Z",
+     "iopub.status.idle": "2026-04-09T14:02:13.761324Z",
+     "shell.execute_reply": "2026-04-09T14:02:13.760508Z"
+    },
+    "papermill": {
+     "duration": 351.329619,
+     "end_time": "2026-04-09T14:02:13.770460+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T13:56:22.440841+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Early stopping at epoch 30\n",
+      "Test AUROC (Optuna best params): 0.9201\n",
+      "Test AUROC (early stopping only): 0.9189\n",
+      "Difference: +0.0012\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Train final model with Optuna best params\n",
+    "best = study.best_params\n",
+    "\n",
+    "torch.manual_seed(1)\n",
+    "final_model = DeepChrome(dropout_rate=best['dropout']).to(device)\n",
+    "optimizer   = optim.SGD(final_model.parameters(), lr=best['lr'], weight_decay=best['weight_decay'], momentum=0)\n",
+    "criterion   = nn.NLLLoss()\n",
+    "\n",
+    "best_val_loss = float('inf')\n",
+    "best_weights  = None\n",
+    "epochs_without_improvement = 0\n",
+    "\n",
+    "for epoch in range(1, 101):\n",
+    "\n",
+    "    final_model.train()\n",
+    "    for X_batch, y_batch in train_loader:\n",
+    "        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "        optimizer.zero_grad()\n",
+    "        output = final_model(X_batch)\n",
+    "        log_probs = torch.log_softmax(output, dim=1)\n",
+    "        loss = criterion(log_probs, y_batch)\n",
+    "        loss.backward()\n",
+    "        optimizer.step()\n",
+    "\n",
+    "    final_model.eval()\n",
+    "    val_loss = 0.0\n",
+    "    with torch.no_grad():\n",
+    "        for X_batch, y_batch in val_loader:\n",
+    "            X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "            output = final_model(X_batch)\n",
+    "            log_probs = torch.log_softmax(output, dim=1)\n",
+    "            val_loss += criterion(log_probs, y_batch).item()\n",
+    "\n",
+    "    avg_val_loss = val_loss / len(val_loader)\n",
+    "\n",
+    "    if avg_val_loss < best_val_loss:\n",
+    "        best_val_loss = avg_val_loss\n",
+    "        best_weights  = final_model.state_dict().copy()\n",
+    "        epochs_without_improvement = 0\n",
+    "    else:\n",
+    "        epochs_without_improvement += 1\n",
+    "        if epochs_without_improvement >= best['patience']:\n",
+    "            print(f\"Early stopping at epoch {epoch}\")\n",
+    "            break\n",
+    "\n",
+    "# Restore best weights and evaluate on test set\n",
+    "final_model.load_state_dict(best_weights)\n",
+    "\n",
+    "final_model.eval()\n",
+    "test_probs, test_labels = [], []\n",
+    "with torch.no_grad():\n",
+    "    for X_batch, y_batch in test_loader:\n",
+    "        X_batch, y_batch = X_batch.to(device), y_batch.to(device)\n",
+    "        probs = torch.softmax(final_model(X_batch), dim=1)[:, 1]\n",
+    "        test_probs.extend(probs.cpu().numpy())\n",
+    "        test_labels.extend(y_batch.cpu().numpy())\n",
+    "\n",
+    "test_auroc_optuna = roc_auc_score(test_labels, test_probs)\n",
+    "print(f\"Test AUROC (Optuna best params): {test_auroc_optuna:.4f}\")\n",
+    "print(f\"Test AUROC (early stopping only): 0.9189\")\n",
+    "print(f\"Difference: {test_auroc_optuna - 0.9189:+.4f}\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "id": "4ca34457",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2026-04-09T14:02:13.785890Z",
+     "iopub.status.busy": "2026-04-09T14:02:13.785545Z",
+     "iopub.status.idle": "2026-04-09T14:02:13.794754Z",
+     "shell.execute_reply": "2026-04-09T14:02:13.794151Z"
+    },
+    "papermill": {
+     "duration": 0.0185,
+     "end_time": "2026-04-09T14:02:13.796086+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T14:02:13.777586+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Final model saved.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Save final model\n",
+    "torch.save(final_model.state_dict(), '/kaggle/working/deepchrome_e047_optuna.pth')\n",
+    "print(\"Final model saved.\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f9900996",
+   "metadata": {
+    "papermill": {
+     "duration": 0.007001,
+     "end_time": "2026-04-09T14:02:13.810382+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T14:02:13.803381+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "source": [
+    "# Key Takeaways\n",
+    "\n",
+    "- After testing different combinations of the hyperparameters and obtaining nearly identical results to the one we obtained while using the author's hyperparameters, we can conclude the hyperparameters of the original paper were already well-chosen.\n",
+    "## Results Summary\n",
+    "\n",
+    "| Configuration                        | Test AUROC |\n",
+    "|--------------------------------------|------------|\n",
+    "| Paper hyperparameters (100 epochs)   | 0.9061     |\n",
+    "| Early stopping only                  | 0.9189     |\n",
+    "| Optuna best params + early stopping  | 0.9201     |\n",
+    "| Paper average (56 cell types)        | 0.8000     |\n",
+    "\n",
+    "# Recommendation\n",
+    "\n",
+    "- For future work, we recommend training the model with different cell types using the following hyperparamter combination:\n",
+    "  - Learning rate: 6.82e-4\n",
+    "  - Dropout: 0.588\n",
+    "  - Weight decay: 1.00e-5\n",
+    "  - Early stopping patience: 9"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c91614dd",
+   "metadata": {
+    "papermill": {
+     "duration": 0.006996,
+     "end_time": "2026-04-09T14:02:13.824755+00:00",
+     "exception": false,
+     "start_time": "2026-04-09T14:02:13.817759+00:00",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "nvidiaTeslaT4",
+   "dataSources": [
+    {
+     "databundleVersionId": 16350591,
+     "datasetId": 9870126,
+     "sourceId": 15431558,
+     "sourceType": "datasetVersion"
+    },
+    {
+     "databundleVersionId": 16386553,
+     "datasetId": 9893256,
+     "sourceId": 15464104,
+     "sourceType": "datasetVersion"
+    }
+   ],
+   "dockerImageVersionId": 31328,
+   "isGpuEnabled": true,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.12"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 7063.475929,
+   "end_time": "2026-04-09T14:02:16.649399+00:00",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2026-04-09T12:04:33.173470+00:00",
+   "version": "2.7.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
