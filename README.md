@@ -1,12 +1,11 @@
 # DeepChrome & AttentiveChrome — PyTorch Replication (Gene expression prediction from Histone modifications) 
 
-This project is a faithful PyTorch replication of [DeepChrome](https://academic.oup.com/bioinformatics/article/32/17/i639/2450757?searchresult=1#394406142) (Singh et al., 2016) and its LSTM/attention-based version [AttentiveChrome](https://pmc.ncbi.nlm.nih.gov/articles/PMC6105294/) (Singh et al., 2017), trained and evaluated on cell type E047 (Primary T CD8+ naive cells) obtained from the NIH Roadmap Epigenomics Mapping Consortium (REMC).
+This project is a faithful PyTorch replication of [DeepChrome](https://academic.oup.com/bioinformatics/article/32/17/i639/2450757?searchresult=1#394406142) (Singh et al., 2016) and its LSTM/attention-based version [AttentiveChrome](https://arxiv.org/abs/1708.00336) (Singh et al., 2017), trained and evaluated on cell type E047 (Primary T CD8+ naive cells) obtained from the NIH Roadmap Epigenomics Mapping Consortium (REMC).
 
 ---
 
 ## Project Overview
-
-DeepChrome predicts gene expression (high/low) from histone modification signals using a CNN. AttentiveChrome extends this with a hierarchical LSTM + attention mechanism, adding biological interpretability on top of competitive predictive performance.
+DeepChrome is a CNN model that predicts gene expression (high/low) from modification signals on the histone level. On the other hand, AttentiveChrome is an LSTM with an attention mechanism that adds biological interpretability on top of competitive predictive performance.
 
 This project replicates both models from scratch in modern PyTorch, starting from the original Lua/Torch7 source, and evaluates them on E047.
 
@@ -18,8 +17,8 @@ This project replicates both models from scratch in modern PyTorch, starting fro
 deepchrome/
 │
 ├── Preprocessing
-│   ├── extract_tss.py               # Extract TSS coordinates from GENCODE v19 GTF
-│   ├── create_bins.py               # Divide ±5kb TSS windows into 100bp bins
+│   ├── extract_tss.py               # TSS(Transcription starting site) coordinates extraction
+│   ├── create_bins.py               # Divide ±5000 b TSS windows into 100bp bins
 │   ├── convert_to_bam.py            # Convert REMC tagAlign files to BAM format
 │   └── count_reads.py               # Count histone mark reads per bin (bedtools multicov)
 │
@@ -33,12 +32,12 @@ deepchrome/
 
 ## Dataset
 
-- **Cell type**: E047 — Primary T CD8+ naive cells (REMC)
-- **Histone marks**: H3K4me3, H3K4me1, H3K36me3, H3K9me3, H3K27me3
-- **Genes**: 19,300 after filtering (GENCODE v19, chromosomes 1–22 + X)
-- **Features**: 500 per gene — 100 bins × 5 histone marks, read counts aggregated per 100bp bin in a ±5kb TSS window
-- **Labels**: Binary — high (1) / low (0) expression based on RPKM median split
-- **Split**: Train / Val / Test — 6,601 / 6,601 / 6,098 (`np.random.seed(1)`)
+- **Cell line**: E047( Primary T CD8+ naive cells), source is  (REMC)
+- **Histone marks**: 5 marks (H3K4me3, H3K4me1, H3K36me3, H3K9me3, H3K27me3)
+- **Genes**: 19,300 after filtering (GENCODE v19, chromosomes 1-22 + X)
+- **Features**: 500 per gene, 100 bins × 5 histone marks, read counts aggregated per 100bp bin in a ±5kb TSS window
+- **Labels**: Binary; high (1) / low (0) expression based on RPKM median split
+- **Split**: Train = 6,601,  Val=  6,601,  Test = 6,098 (`np.random.seed(1)`)
 
 ---
 
@@ -49,9 +48,11 @@ deepchrome/
 A CNN that takes histone modification signals as a (5 marks × 100 bins) feature map.
 
 ```
-Conv1d(5 → 50, kernel=10) → ReLU → MaxPool1d(5)
-→ Dropout → Linear(900 → 625) → ReLU
-→ Linear(625 → 125) → ReLU → Linear(125 → 2)
+Conv1d(in-channels(5) , out-channels(50), kernel=10) 
+Activation function: ReLU
+Downsampling: MaxPool1d(5)
+Dropout (0.5)
+Linear- 3 layers (900, 625),(625 → 125), Linear(125 → 2) 
 ```
 
 - **Loss**: NLLLoss (with log_softmax)
@@ -63,9 +64,9 @@ Conv1d(5 → 50, kernel=10) → ReLU → MaxPool1d(5)
 A hierarchical LSTM + attention model that encodes each histone mark's bin sequence independently, then attends across marks.
 
 **Three components:**
-1. **BinEncoder** — Bidirectional LSTM encoding bin sequences per mark
-2. **Attention (α)** — Soft attention over bins for each mark (bin-level)
-3. **Attention (β)** — Soft attention over marks (mark-level)
+1. **BinEncoder**:  Bidirectional LSTM encoding bin sequences per mark
+2. **Attention (α)**: Soft attention over bins for each mark (bin-level)
+3. **Attention (β)**: Soft attention over marks (mark-level)
 
 ```
 Input (N, 100, 5) → 5 × BinEncoder (BiLSTM) → 5 × Attention(α)
@@ -181,3 +182,5 @@ samtools (for preprocessing)
 - Singh, R., Lanchantin, J., Sekhon, A., & Qi, Y. (2017). [AttentiveChrome: Attend and Predict: Understanding Gene Expression with Deep Neural Networks](https://arxiv.org/abs/1708.00336). *NeurIPS*.
 - NIH Roadmap Epigenomics Mapping Consortium. https://www.roadmapepigenomics.org/
 - GENCODE v19. https://www.gencodegenes.org/human/release_19.html
+
+
