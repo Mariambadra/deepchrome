@@ -69,9 +69,14 @@ A hierarchical LSTM + attention model that encodes each histone mark's bin seque
 3. **Attention (β)**: Soft attention over marks (mark-level)
 
 ```
-Input (N, 100, 5) → 5 × BinEncoder (BiLSTM) → 5 × Attention(α)
-→ Mark representations → BinEncoder (BiLSTM) → Attention(β)
-→ Linear(1) → Sigmoid
+- Input (N, 100, 5)
+- 5 × BinEncoder (BiLSTM) 
+- 5 × Attention(α)
+- Mark representations 
+- BinEncoder (BiLSTM) 
+- Attention(β)
+- Linear(1)
+- Sigmoid
 ```
 
 - **Loss**: BCELoss
@@ -84,10 +89,10 @@ Input (N, 100, 5) → 5 × BinEncoder (BiLSTM) → 5 × Attention(α)
 
 | Configuration | Test AUROC |
 |---|---|
-| DeepChrome — paper hyperparameters, 100 epochs | 0.9061 |
-| DeepChrome — early stopping (patience=10) | 0.9189 |
-| DeepChrome — Optuna tuning + early stopping | 0.9201 |
-| AttentiveChrome — early stopping (patience=10) | 0.9198 |
+| DeepChrome: paper hyperparameters, 100 epochs | 0.9061 |
+| DeepChrome: early stopping (patience=10) | 0.9189 |
+| DeepChrome: Optuna tuning + early stopping | 0.9201 |
+| AttentiveChrome: early stopping (patience=10) | 0.9198 |
 | **Paper reported average (56 cell types)** | **0.8000** |
 
 Both models substantially exceed the paper's reported average AUROC of 0.80. AttentiveChrome matches DeepChrome Optuna performance without any hyperparameter tuning, while also providing biological interpretability through its attention weights.
