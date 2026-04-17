@@ -1,6 +1,6 @@
-# DeepChrome & AttentiveChrome — PyTorch Replication
+# DeepChrome & AttentiveChrome — PyTorch Replication (Gene expression prediction from Histone modifications) 
 
-A faithful PyTorch replication of [DeepChrome](https://arxiv.org/abs/1607.02078) (Singh et al., 2016) and its attention-based extension [AttentiveChrome](https://arxiv.org/abs/1708.00336) (Singh et al., 2017), applied to cell type E047 (Primary T CD8+ naive cells) from the NIH Roadmap Epigenomics Mapping Consortium (REMC).
+A PyTorch replication of [DeepChrome](https://academic.oup.com/bioinformatics/article/32/17/i639/2450757?searchresult=1#394406142) (Singh et al., 2016) and its attention-based extension [AttentiveChrome](https://arxiv.org/abs/1708.00336) (Singh et al., 2017), trained and evaluated on cell type E047 (Primary T CD8+ naive cells) obtainedd from the NIH Roadmap Epigenomics Mapping Consortium (REMC).
 
 ---
 
