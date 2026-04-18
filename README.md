@@ -107,7 +107,7 @@ Early stopping was the single most impactful regularization step for both models
 
 Attention weights were averaged across all test set genes to produce a single representative view of what the model learned to focus on.
 
-![Attention Visualization](attentivechrome_attention_e047.png)
+![Attention Visualization](attentivechrome_attention_e047.PNG)
 
 ### Mark-level Attention (β)
 
