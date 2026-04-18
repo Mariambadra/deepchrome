@@ -5,7 +5,7 @@ This project is a faithful PyTorch replication of [DeepChrome](https://academic.
 ---
 
 ## Project Overview
-DeepChrome is a CNN model that predicts gene expression (high/low) from modification signals on the histone level. On the other hand, AttentiveChrome is an LSTM with an attention mechanism that adds biological interpretability on top of competitive predictive performance.
+DeepChrome is a CNN model that predicts gene expression (high/low) from modification signals at the level of histone level. On the other hand, AttentiveChrome is an LSTM with an attention mechanism that adds biological interpretability on top of the competitive predictive performance.
 
 This project replicates both models from scratch in modern PyTorch, starting from the original Lua/Torch7 source, and evaluates them on E047.
 
@@ -38,6 +38,8 @@ deepchrome/
 - **Features**: 500 per gene, 100 bins × 5 histone marks, read counts aggregated per 100bp bin in a ±5kb TSS window
 - **Labels**: Binary; high (1) / low (0) expression based on RPKM median split
 - **Split**: Train = 6,601,  Val=  6,601,  Test = 6,098 (`np.random.seed(1)`)
+  [E047_dataset](https://www.kaggle.com/datasets/mariamali12/e047-dataset)
+  [DeepChrome E047 Histone Mark Counts](https://www.kaggle.com/datasets/mariamali12/deepchrome-e047-counts)
 
 ---
 
@@ -117,17 +119,19 @@ Attention weights were averaged across all test set genes to produce a single re
 | H3K9me3 | 0.137 | Constitutive heterochromatin |
 | H3K36me3 | 0.120 | Transcribed gene body |
 
-**H3K4me3 dominance** is expected — it is the canonical active promoter mark, tightly focused at the TSS, and the strongest predictor of gene expression. Its high β weight reflects its direct relevance to transcriptional activation in CD8+ naive T cells.
+**H3K4me3 dominance** is expected. 
+It is the canonical active promoter mark, tightly focused at the TSS, and the strongest predictor of gene expression. Its high β weight reflects its direct relevance to transcriptional activation in CD8+ naive T cells.
 
-**H3K27me3 as second highest (β=0.221)** is biologically meaningful. In naive CD8+ T cells, bivalent chromatin domains — where H3K4me3 and H3K27me3 co-occur — are well documented at genes that are silenced but poised for rapid activation upon antigen encounter. The model's joint weighting of both marks likely captures this bivalency, where the co-occurrence pattern is more informative than either mark alone.
+**H3K27me3 as second highest (β=0.221)** is biologically meaningful. 
+In naive CD8+ T cells, H3K4me3 and H3K27me3 can co-exist. This state is called bivalent chromatin domains that is well documented at genes that are silenced but ready for rapid activation when induced. The model identifies this bivalency, where the co-existing patterns are more informative than either mark alone.
 
-**H3K4me1's moderate weight (β=0.177)** suggests the model is also capturing distal regulatory activity via enhancers, which are marked by H3K4me1 rather than H3K4me3.
+**H3K4me1's moderate weight (β=0.177)** suggests the model is also capturing distal regulatory activity via enhancers.
 
 ### Bin-level Attention (α)
 
-**H3K4me3** shows the sharpest attention peak at the TSS (bin 50), consistent with its well-characterized tight enrichment at active promoters.
+**H3K4me3** shows the highest attention peak around bin 50 (TSS). This observation aligns with one of its characteristics, which is enrichment at active promoters.
 
-**H3K36me3** shows the most distinctive spatial pattern: low attention near the TSS and elevated attention toward the distal ends of the window (bins 0–5 and ~95–100). This reflects its known biology — H3K36me3 is deposited by SETD2 during transcriptional elongation and accumulates in gene bodies downstream of the TSS, not at the promoter itself. The model learned this spatial distribution without explicit positional supervision.
+**H3K36me3**: low attention near the TSS and elevated attention toward the far ends of the window. This reflects its known biology; H3K36me3 is deposited by SETD2 during transcriptional elongation and accumulates in gene bodies downstream of the TSS, not at the promoter itself. The model learned this spatial distribution without explicit positional supervision.
 
 **H3K27me3 and H3K9me3** show relatively uniform attention across bins, consistent with their role as broad repressive domains not tightly anchored to the TSS.
 
@@ -150,15 +154,15 @@ The final dataset (`E047_dataset.csv`, 19,300 × 501) is assembled in `deepchrom
 
 ### 2. DeepChrome Training & Evaluation
 
-Open `deepchrome_2_authers_model.ipynb` on Kaggle (GPU recommended). The notebook covers:
-- Model definition (faithful to original Lua architecture)
+`deepchrome_2_authers_model.ipynb` covers:
+- Model definition (Using original paper hyperparameters)
 - Training with early stopping
 - Optuna hyperparameter tuning (30 trials)
 - Test set evaluation
 
 ### 3. AttentiveChrome Training & Evaluation
 
-Open `AttentiveChrome_Replication.ipynb` on Kaggle (GPU recommended). The notebook covers:
+`AttentiveChrome_Replication.ipynb` covers:
 - Model definition (BinEncoder, Attention, AttentiveChrome)
 - Training with early stopping
 - Test set evaluation
@@ -169,14 +173,15 @@ Open `AttentiveChrome_Replication.ipynb` on Kaggle (GPU recommended). The notebo
 ## Requirements
 
 ```
-torch
-numpy
-pandas
-scikit-learn
-optuna
-matplotlib
 bedtools (for preprocessing)
 samtools (for preprocessing)
+numpy
+pandas
+matplotlib
+torch
+scikit-learn
+optuna
+
 ```
 
 ---
